@@ -1,8 +1,5 @@
-import { PrismaAdapter } from "@auth/prisma-adapter";
 import { type DefaultSession, type NextAuthConfig } from "next-auth";
-import DiscordProvider from "next-auth/providers/discord";
-
-import { db } from "~/server/db";
+import Credentials from "next-auth/providers/credentials";
 
 /**
  * Module augmentation for `next-auth` types. Allows us to add custom properties to the `session`
@@ -31,26 +28,66 @@ declare module "next-auth" {
  * @see https://next-auth.js.org/configuration/options
  */
 export const authConfig = {
+  pages: {
+    signIn: "/auth/signin",
+  },
+  session: {
+    strategy: "jwt",
+  },
   providers: [
-    DiscordProvider,
-    /**
-     * ...add more providers here.
-     *
-     * Most other providers require a bit more work than the Discord provider. For example, the
-     * GitHub provider requires you to add the `refresh_token_expires_in` field to the Account
-     * model. Refer to the NextAuth.js docs for the provider you want to use. Example:
-     *
-     * @see https://next-auth.js.org/providers/github
-     */
+    Credentials({
+      name: "Credentials",
+      credentials: {
+        name: { label: "Nome", type: "text", placeholder: "Renê" },
+      },
+      async authorize(credentials) {
+        // Lógica de desenvolvimento - aceita qualquer nome
+        if (!credentials?.name) {
+          return null;
+        }
+        
+        const user = { 
+          id: "user_test_id", 
+          name: credentials.name as string, 
+          email: "test@renoli.com" 
+        };
+        return user;
+      },
+    }),
   ],
-  adapter: PrismaAdapter(db),
   callbacks: {
-    session: ({ session, user }) => ({
+    jwt: ({ token, user }) => {
+      if (user) {
+        token.id = user.id;
+      }
+      return token;
+    },
+    session: ({ session, token }) => ({
       ...session,
       user: {
         ...session.user,
-        id: user.id,
+        id: token.id as string,
       },
     }),
+    authorized: ({ auth, request: { nextUrl } }) => {
+      const isLoggedIn = !!auth?.user;
+      const isOnDashboard = nextUrl.pathname.startsWith("/veiculos") || 
+                           nextUrl.pathname.startsWith("/clientes") ||
+                           nextUrl.pathname.startsWith("/dashboard");
+      const isOnAuthPage = nextUrl.pathname.startsWith("/auth");
+      
+      // Se está tentando acessar página protegida sem estar logado
+      if (isOnDashboard && !isLoggedIn) {
+        return false; // Redireciona para login
+      }
+      
+      // Se está logado e tentando acessar página de auth, redireciona para home
+      if (isLoggedIn && isOnAuthPage) {
+        return Response.redirect(new URL("/", nextUrl));
+      }
+      
+      // Permitir acesso em outros casos
+      return true;
+    },
   },
 } satisfies NextAuthConfig;

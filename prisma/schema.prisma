@@ -14,18 +14,6 @@ datasource db {
     url      = env("DATABASE_URL")
 }
 
-model Post {
-    id        Int      @id @default(autoincrement())
-    name      String
-    createdAt DateTime @default(now())
-    updatedAt DateTime @updatedAt
-
-    createdBy   User   @relation(fields: [createdById], references: [id])
-    createdById String
-
-    @@index([name])
-}
-
 // Necessary for Next auth
 model Account {
     id                       String  @id @default(cuid())
@@ -55,14 +43,14 @@ model Session {
 }
 
 model User {
-    id            String    @id @default(cuid())
-    name          String?
-    email         String?   @unique
-    emailVerified DateTime?
-    image         String?
-    accounts      Account[]
-    sessions      Session[]
-    posts         Post[]
+    id                  String    @id @default(cuid())
+    name                String?
+    email               String?   @unique
+    emailVerified       DateTime?
+    image               String?
+    accounts            Account[]
+    sessions            Session[]
+    veiculosCadastrados Veiculo[]
 }
 
 model VerificationToken {
@@ -71,4 +59,115 @@ model VerificationToken {
     expires    DateTime
 
     @@unique([identifier, token])
+}
+
+// Modelos Auxiliares para o cadastro de Cliente
+model Profissao {
+    id       String    @id @default(uuid())
+    nome     String    @unique
+    clientes Cliente[]
+}
+
+model EstadoCivil {
+    id       String    @id @default(uuid())
+    nome     String    @unique
+    clientes Cliente[]
+}
+
+// Modelo Principal de Cliente
+model Cliente {
+    id             String    @id @default(uuid())
+    nome           String
+    cpf            String?   @unique // Opcional, para resolver o "Cliente sem CPF"
+    rg             String?
+    dataNascimento DateTime?
+
+    // Contato
+    celular      String
+    telefoneFixo String?
+    email        String? @unique
+
+    // Endereço
+    cep         String?
+    rua         String?
+    numero      String?
+    complemento String?
+    bairro      String?
+    cidade      String?
+    estado      String?
+
+    // Marketing e Observações
+    aceitaMarketing     Boolean @default(true) // Campo MALADIRETA
+    observacoesNegocios String? @db.Text // Campo NEGOCIOS
+
+    // Timestamps
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+
+    // Relações
+    profissaoId String?
+    profissao   Profissao? @relation(fields: [profissaoId], references: [id])
+
+    estadoCivilId String?
+    estadoCivil   EstadoCivil? @relation(fields: [estadoCivilId], references: [id])
+
+    veiculosVendidosParaLoja Veiculo[] @relation("ClienteToVendedor")
+    veiculosCompradosDaLoja  Veiculo[] @relation("ClienteToComprador")
+}
+
+// Enums para o modelo Veiculo
+enum StatusVeiculo {
+    DISPONIVEL
+    RESERVADO
+    VENDIDO
+}
+
+enum TipoTransacao {
+    COMPRA
+    CONSIGNACAO
+    LOJA
+}
+
+// Modelo Principal de Veículo
+model Veiculo {
+    id            String  @id @default(uuid())
+    placa         String  @unique
+    marca         String
+    modelo        String
+    versao        String?
+    anoFabricacao Int
+    anoModelo     Int
+    cor           String
+    km            Int
+    cambio        String // Ex: "Automático", "Manual"
+    combustivel   String
+    portas        Int
+    chassi        String? @unique
+    renavam       String? @unique
+
+    // Financeiro - Usamos Decimal para evitar erros de arredondamento com dinheiro
+    precoCusto Decimal?
+    precoVenda Decimal
+
+    // Descrições
+    descricaoAnuncio    String? @db.Text
+    observacoesInternas String? @db.Text
+
+    // Status e Transação
+    status        StatusVeiculo @default(DISPONIVEL)
+    tipoTransacao TipoTransacao
+
+    // Timestamps
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+
+    // Relações
+    clienteIdVendedor String // De quem a loja comprou/pegou o carro
+    vendedor          Cliente @relation("ClienteToVendedor", fields: [clienteIdVendedor], references: [id])
+
+    clienteIdComprador String? // Para quem a loja vendeu o carro
+    comprador          Cliente? @relation("ClienteToComprador", fields: [clienteIdComprador], references: [id])
+
+    userId        String // Quem cadastrou o veículo no sistema (o campo "insere")
+    cadastradoPor User   @relation(fields: [userId], references: [id])
 }
