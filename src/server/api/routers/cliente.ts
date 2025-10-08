@@ -28,7 +28,7 @@ const createClienteSchema = z.object({
   observacoesNegocios: z.string().optional(),
 
   // Relações
-  profissaoId: z.string().optional(),
+  profissaoId: z.string().optional().nullable().transform(val => val === "" ? null : val),
   estadoCivilId: z.string().optional(),
 });
 
@@ -44,11 +44,14 @@ export const clienteRouter = createTRPCRouter({
     .mutation(async ({ ctx, input }) => {
       // Tratamento especial para email vazio
       const emailToSave = input.email === "" ? undefined : input.email;
+      // Tratamento especial para profissaoId vazio/null
+      const profissaoIdToSave = input.profissaoId ?? undefined;
 
       return ctx.db.cliente.create({
         data: {
           ...input,
           email: emailToSave,
+          profissaoId: profissaoIdToSave,
         },
       });
     }),
@@ -78,6 +81,8 @@ export const clienteRouter = createTRPCRouter({
       
       // Tratamento especial para email vazio
       const emailToSave = updateData.email === "" ? undefined : updateData.email;
+      // Tratamento especial para profissaoId vazio/null
+      const profissaoIdToSave = updateData.profissaoId ?? undefined;
 
       return ctx.db.cliente.update({
         where: {
@@ -86,6 +91,7 @@ export const clienteRouter = createTRPCRouter({
         data: {
           ...updateData,
           email: emailToSave,
+          profissaoId: profissaoIdToSave,
         },
       });
     }),

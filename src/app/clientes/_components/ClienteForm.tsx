@@ -34,7 +34,7 @@ const createClienteSchema = z.object({
   observacoesNegocios: z.string().optional(),
 
   // Relações
-  profissaoId: z.string().optional(),
+  profissaoId: z.string().optional().nullable().transform(val => val === "" ? null : val),
   estadoCivilId: z.string().optional(),
 });
 
@@ -78,6 +78,9 @@ export default function ClienteForm({ initialData }: ClienteFormProps) {
   });
 
   const isPending = isCreating || isUpdating;
+
+  // Hook para buscar profissões
+  const { data: profissoes, isLoading: isLoadingProfissoes } = api.profissao.getAll.useQuery();
 
   function onSubmit(data: CreateClienteInput) {
     // Converter data de nascimento para Date se fornecida
@@ -367,8 +370,29 @@ export default function ClienteForm({ initialData }: ClienteFormProps) {
 
           {/* Marketing e Observações */}
           <div>
-            <h2 className="text-lg font-semibold text-gray-700 mb-4">Marketing e Observações</h2>
+            <h2 className="text-lg font-semibold text-gray-700 mb-4">Informações Adicionais</h2>
             <div className="space-y-4">
+              <div>
+                <label htmlFor="profissaoId" className="block text-sm font-medium text-gray-700 mb-1">
+                  Profissão
+                </label>
+                <select
+                  id="profissaoId"
+                  className="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  disabled={isLoadingProfissoes}
+                  {...form.register("profissaoId")}
+                >
+                  <option value="">
+                    {isLoadingProfissoes ? "Carregando profissões..." : "Selecione uma profissão"}
+                  </option>
+                  {profissoes?.map((profissao) => (
+                    <option key={profissao.id} value={profissao.id}>
+                      {profissao.nome}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
               <div className="flex items-center">
                 <input
                   id="aceitaMarketing"
