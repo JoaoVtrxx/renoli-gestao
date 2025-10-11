@@ -29,7 +29,7 @@ const createClienteSchema = z.object({
 
   // Relações
   profissaoId: z.string().optional().nullable().transform(val => val === "" ? null : val),
-  estadoCivilId: z.string().optional(),
+  estadoCivilId: z.string().optional().nullable().transform(val => val === "" ? null : val),
 });
 
 export const clienteRouter = createTRPCRouter({
@@ -46,12 +46,15 @@ export const clienteRouter = createTRPCRouter({
       const emailToSave = input.email === "" ? undefined : input.email;
       // Tratamento especial para profissaoId vazio/null
       const profissaoIdToSave = input.profissaoId ?? undefined;
+      // Tratamento especial para estadoCivilId vazio/null
+      const estadoCivilIdToSave = input.estadoCivilId ?? undefined;
 
       return ctx.db.cliente.create({
         data: {
           ...input,
           email: emailToSave,
           profissaoId: profissaoIdToSave,
+          estadoCivilId: estadoCivilIdToSave,
         },
       });
     }),
@@ -83,6 +86,8 @@ export const clienteRouter = createTRPCRouter({
       const emailToSave = updateData.email === "" ? undefined : updateData.email;
       // Tratamento especial para profissaoId vazio/null
       const profissaoIdToSave = updateData.profissaoId ?? undefined;
+      // Tratamento especial para estadoCivilId vazio/null
+      const estadoCivilIdToSave = updateData.estadoCivilId ?? undefined;
 
       return ctx.db.cliente.update({
         where: {
@@ -92,6 +97,7 @@ export const clienteRouter = createTRPCRouter({
           ...updateData,
           email: emailToSave,
           profissaoId: profissaoIdToSave,
+          estadoCivilId: estadoCivilIdToSave,
         },
       });
     }),

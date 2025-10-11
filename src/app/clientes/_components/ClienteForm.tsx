@@ -35,7 +35,7 @@ const createClienteSchema = z.object({
 
   // Relações
   profissaoId: z.string().optional().nullable().transform(val => val === "" ? null : val),
-  estadoCivilId: z.string().optional(),
+  estadoCivilId: z.string().optional().nullable().transform(val => val === "" ? null : val),
 });
 
 type CreateClienteInput = z.infer<typeof createClienteSchema>;
@@ -81,6 +81,9 @@ export default function ClienteForm({ initialData }: ClienteFormProps) {
 
   // Hook para buscar profissões
   const { data: profissoes, isLoading: isLoadingProfissoes } = api.profissao.getAll.useQuery();
+
+  // Hook para buscar estados civis
+  const { data: estadosCivis, isLoading: isLoadingEstadosCivis } = api.estadoCivil.getAll.useQuery();
 
   function onSubmit(data: CreateClienteInput) {
     // Converter data de nascimento para Date se fornecida
@@ -388,6 +391,27 @@ export default function ClienteForm({ initialData }: ClienteFormProps) {
                   {profissoes?.map((profissao) => (
                     <option key={profissao.id} value={profissao.id}>
                       {profissao.nome}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div>
+                <label htmlFor="estadoCivilId" className="block text-sm font-medium text-gray-700 mb-1">
+                  Estado Civil
+                </label>
+                <select
+                  id="estadoCivilId"
+                  className="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  disabled={isLoadingEstadosCivis}
+                  {...form.register("estadoCivilId")}
+                >
+                  <option value="">
+                    {isLoadingEstadosCivis ? "Carregando estados civis..." : "Selecione um estado civil"}
+                  </option>
+                  {estadosCivis?.map((estadoCivil) => (
+                    <option key={estadoCivil.id} value={estadoCivil.id}>
+                      {estadoCivil.nome}
                     </option>
                   ))}
                 </select>
