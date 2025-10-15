@@ -3,4 +3,9 @@
 @theme {
   --font-sans: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif,
     "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
+  --font-display: "Inter", sans-serif;
+  
+  --color-primary: #133d90;
+  --color-sidebar: #0B2A4F;
+  --color-background: #f6f6f8;
 }

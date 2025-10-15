@@ -2,9 +2,9 @@
 
 import { signIn } from "next-auth/react";
 import { useSearchParams } from "next/navigation";
-import { useState } from "react";
+import { useState, Suspense } from "react";
 
-export default function SignInPage() {
+function SignInForm() {
   const [name, setName] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const searchParams = useSearchParams();
@@ -73,5 +73,13 @@ export default function SignInPage() {
         </form>
       </div>
     </div>
+  );
+}
+
+export default function SignInPage() {
+  return (
+    <Suspense fallback={<div>Carregando...</div>}>
+      <SignInForm />
+    </Suspense>
   );
 }
