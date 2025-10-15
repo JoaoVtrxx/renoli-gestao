@@ -11,6 +11,7 @@ import { useEffect, useState, useCallback } from "react";
 import { useDropzone } from "react-dropzone";
 import Image from "next/image";
 import { env } from "~/env";
+import toast from "react-hot-toast";
 
 const createVeiculoSchema = z.object({
   placa: z.string().min(7, "A placa deve ter no mínimo 7 caracteres"),
@@ -85,19 +86,20 @@ export default function VeiculoForm({ initialData }: VeiculoFormProps) {
                   form.setValue('fotos', newUrls);
                   return newUrls;
                 });
+                toast.success('Foto enviada com sucesso!');
               } else {
-                console.error('❌ Erro no upload do arquivo');
+                toast.error('Erro no upload da foto');
               }
-            } catch (error) {
-              console.error('❌ Erro no upload:', error);
+            } catch {
+              toast.error('Erro no upload da foto');
             }
           },
-          onError: (error) => {
-            console.error('❌ Erro ao gerar URL de upload:', error);
+          onError: (_error) => {
+            toast.error('Erro ao preparar upload da foto');
           }
         });
-      } catch (error) {
-        console.error('❌ Erro no processo de upload:', error);
+      } catch {
+        toast.error('Erro no processo de upload');
       }
     });
   }, [createPresignedUrl, form]);
@@ -122,22 +124,22 @@ export default function VeiculoForm({ initialData }: VeiculoFormProps) {
 
   const { mutate: createVeiculo, isPending: isCreating } = api.veiculo.create.useMutation({
     onSuccess: () => {
-      console.log("✅ Veículo criado com sucesso!");
+      toast.success("Veículo salvo com sucesso!");
       form.reset();
       router.push("/veiculos");
     },
-    onError: (error) => {
-      console.error("❌ Erro ao criar veículo:", error);
+    onError: (_error) => {
+      toast.error("Houve um erro ao salvar o veículo.");
     },
   });
 
   const { mutate: updateVeiculo, isPending: isUpdating } = api.veiculo.update.useMutation({
     onSuccess: () => {
-      console.log("✅ Veículo atualizado com sucesso!");
+      toast.success("Veículo atualizado com sucesso!");
       router.push("/veiculos");
     },
-    onError: (error) => {
-      console.error("❌ Erro ao atualizar veículo:", error);
+    onError: (_error) => {
+      toast.error("Houve um erro ao salvar o veículo.");
     },
   });
 
