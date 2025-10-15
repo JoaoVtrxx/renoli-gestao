@@ -36,7 +36,7 @@ const createVeiculoSchema = z.object({
 type CreateVeiculoInput = z.infer<typeof createVeiculoSchema>;
 
 interface VeiculoFormProps {
-  initialData?: Partial<CreateVeiculoInput & { id: string; fotos?: string[] }>;
+  initialData?: Partial<CreateVeiculoInput & { id: string }>;
 }
 
 export default function VeiculoForm({ initialData }: VeiculoFormProps) {
@@ -46,7 +46,7 @@ export default function VeiculoForm({ initialData }: VeiculoFormProps) {
   // Estado para gerenciar URLs das fotos
   const [fotosUrls, setFotosUrls] = useState<string[]>(initialData?.fotos ?? []);
 
-  const form = useForm<CreateVeiculoInput>({
+  const form = useForm({
     resolver: zodResolver(createVeiculoSchema),
     defaultValues: {
       status: StatusVeiculo.DISPONIVEL,
@@ -61,50 +61,42 @@ export default function VeiculoForm({ initialData }: VeiculoFormProps) {
 
   // Função para lidar com o drop de arquivos
   const onDrop = useCallback((acceptedFiles: File[]) => {
-    acceptedFiles.forEach(async (file) => {
-      try {
-        // Gerar presigned URL
-        createPresignedUrl({ fileType: file.type }, {
-          onSuccess: async (data) => {
-            try {
-              // Fazer upload do arquivo para a URL assinada
-              const uploadResponse = await fetch(data.url, {
-                method: 'PUT',
-                body: file,
-                headers: {
-                  'Content-Type': file.type,
-                },
+    acceptedFiles.forEach((file) => {
+      // Gerar presigned URL
+      createPresignedUrl({ fileType: file.type }, {
+        onSuccess: (data) => {
+          // Fazer upload do arquivo para a URL assinada
+          fetch(data.url, {
+            method: 'PUT',
+            body: file,
+            headers: {
+              'Content-Type': file.type,
+            },
+          }).then(uploadResponse => {
+            if (uploadResponse.ok) {
+              // Construir URL pública da imagem
+              const publicUrl = `${env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/${data.path}`;
+              
+              // Adicionar URL ao estado e ao formulário
+              setFotosUrls(prev => {
+                const newUrls = [...prev, publicUrl];
+                form.setValue('fotos', newUrls);
+                return newUrls;
               });
-
-              if (uploadResponse.ok) {
-                // Construir URL pública da imagem
-                const publicUrl = `${env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/${data.path}`;
-                
-                // Adicionar URL ao estado e ao formulário
-                setFotosUrls(prev => {
-                  const newUrls = [...prev, publicUrl];
-                  form.setValue('fotos', newUrls);
-                  return newUrls;
-                });
-                toast.success('Foto enviada com sucesso!');
-              } else {
-                toast.error('Erro no upload da foto');
-              }
-            } catch {
+              toast.success('Foto enviada com sucesso!');
+            } else {
               toast.error('Erro no upload da foto');
             }
-          },
-          onError: (_error) => {
-            toast.error('Erro ao preparar upload da foto');
-          }
-        });
-      } catch {
-        toast.error('Erro no processo de upload');
-      }
+          }).catch(() => {
+            toast.error('Erro no upload da foto');
+          });
+        },
+        onError: (_error) => {
+          toast.error('Erro ao preparar upload da foto');
+        }
+      });
     });
-  }, [createPresignedUrl, form]);
-
-  // Configuração do dropzone
+  }, [createPresignedUrl, form]);  // Configuração do dropzone
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     onDrop,
     accept: {
