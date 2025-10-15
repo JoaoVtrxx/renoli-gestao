@@ -7,7 +7,10 @@ import { api } from "~/trpc/react";
 import { StatusVeiculo, TipoTransacao } from "@prisma/client";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
-import { useEffect } from "react";
+import { useEffect, useState, useCallback } from "react";
+import { useDropzone } from "react-dropzone";
+import Image from "next/image";
+import { env } from "~/env";
 
 const createVeiculoSchema = z.object({
   placa: z.string().min(7, "A placa deve ter no mínimo 7 caracteres"),
@@ -26,26 +29,96 @@ const createVeiculoSchema = z.object({
   clienteIdVendedor: z.string({ required_error: "Selecione o cliente vendedor."}),
   descricaoAnuncio: z.string().optional(),
   observacoesInternas: z.string().optional(),
+  fotos: z.array(z.string()).default([]),
 });
 
 type CreateVeiculoInput = z.infer<typeof createVeiculoSchema>;
 
 interface VeiculoFormProps {
-  initialData?: Partial<CreateVeiculoInput & { id: string }>;
+  initialData?: Partial<CreateVeiculoInput & { id: string; fotos?: string[] }>;
 }
 
 export default function VeiculoForm({ initialData }: VeiculoFormProps) {
   const { data: session, status } = useSession();
   const router = useRouter();
 
+  // Estado para gerenciar URLs das fotos
+  const [fotosUrls, setFotosUrls] = useState<string[]>(initialData?.fotos ?? []);
+
   const form = useForm<CreateVeiculoInput>({
     resolver: zodResolver(createVeiculoSchema),
     defaultValues: {
       status: StatusVeiculo.DISPONIVEL,
       tipoTransacao: TipoTransacao.COMPRA,
+      fotos: [],
       ...initialData,
     },
   });
+
+  // Mutation para gerar presigned URL
+  const { mutate: createPresignedUrl } = api.veiculo.createPresignedUrl.useMutation();
+
+  // Função para lidar com o drop de arquivos
+  const onDrop = useCallback((acceptedFiles: File[]) => {
+    acceptedFiles.forEach(async (file) => {
+      try {
+        // Gerar presigned URL
+        createPresignedUrl({ fileType: file.type }, {
+          onSuccess: async (data) => {
+            try {
+              // Fazer upload do arquivo para a URL assinada
+              const uploadResponse = await fetch(data.url, {
+                method: 'PUT',
+                body: file,
+                headers: {
+                  'Content-Type': file.type,
+                },
+              });
+
+              if (uploadResponse.ok) {
+                // Construir URL pública da imagem
+                const publicUrl = `${env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/${data.path}`;
+                
+                // Adicionar URL ao estado e ao formulário
+                setFotosUrls(prev => {
+                  const newUrls = [...prev, publicUrl];
+                  form.setValue('fotos', newUrls);
+                  return newUrls;
+                });
+              } else {
+                console.error('❌ Erro no upload do arquivo');
+              }
+            } catch (error) {
+              console.error('❌ Erro no upload:', error);
+            }
+          },
+          onError: (error) => {
+            console.error('❌ Erro ao gerar URL de upload:', error);
+          }
+        });
+      } catch (error) {
+        console.error('❌ Erro no processo de upload:', error);
+      }
+    });
+  }, [createPresignedUrl, form]);
+
+  // Configuração do dropzone
+  const { getRootProps, getInputProps, isDragActive } = useDropzone({
+    onDrop,
+    accept: {
+      'image/*': ['.jpeg', '.jpg', '.png', '.webp']
+    },
+    multiple: true
+  });
+
+  // Função para remover foto
+  const removeFoto = (indexToRemove: number) => {
+    setFotosUrls(prev => {
+      const newUrls = prev.filter((_, index) => index !== indexToRemove);
+      form.setValue('fotos', newUrls);
+      return newUrls;
+    });
+  };
 
   const { mutate: createVeiculo, isPending: isCreating } = api.veiculo.create.useMutation({
     onSuccess: () => {
@@ -401,6 +474,67 @@ export default function VeiculoForm({ initialData }: VeiculoFormProps) {
                 />
               </div>
             </div>
+          </div>
+
+          {/* Fotos do Veículo */}
+          <div className="border-b pb-4">
+            <h2 className="text-lg font-semibold text-gray-700 mb-4">Fotos do Veículo</h2>
+            
+            {/* Área de Upload */}
+            <div 
+              {...getRootProps()} 
+              className={`border-2 border-dashed rounded-lg p-8 text-center cursor-pointer transition-colors ${
+                isDragActive 
+                  ? 'border-blue-500 bg-blue-50' 
+                  : 'border-gray-300 hover:border-gray-400'
+              }`}
+            >
+              <input {...getInputProps()} />
+              <div className="space-y-2">
+                <div className="text-gray-500">
+                  {isDragActive ? (
+                    <p>Solte as imagens aqui...</p>
+                  ) : (
+                    <div>
+                      <p>Arraste e solte imagens aqui ou <span className="text-blue-600 font-medium">clique para selecionar</span></p>
+                      <p className="text-sm text-gray-400">Formatos aceitos: JPEG, PNG, WebP</p>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            {/* Grade de Fotos */}
+            {fotosUrls.length > 0 && (
+              <div className="mt-6">
+                <h3 className="text-md font-medium text-gray-700 mb-3">Fotos adicionadas:</h3>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                  {fotosUrls.map((url, index) => (
+                    <div key={index} className="relative group">
+                      <div className="aspect-square rounded-lg overflow-hidden border border-gray-200">
+                        <Image
+                          src={url}
+                          alt={`Foto ${index + 1}`}
+                          width={200}
+                          height={200}
+                          className="w-full h-full object-cover"
+                        />
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => removeFoto(index)}
+                        aria-label={`Remover foto ${index + 1}`}
+                        className="absolute -top-2 -right-2 bg-red-500 hover:bg-red-600 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity"
+                      >
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
 
           {/* Botão de Submit */}

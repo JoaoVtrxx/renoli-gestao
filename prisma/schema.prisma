@@ -153,6 +153,8 @@ model Veiculo {
     descricaoAnuncio    String? @db.Text
     observacoesInternas String? @db.Text
 
+    fotos String[] @default([])
+
     // Status e Transação
     status        StatusVeiculo @default(DISPONIVEL)
     tipoTransacao TipoTransacao
