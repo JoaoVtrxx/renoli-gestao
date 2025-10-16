@@ -1,6 +1,7 @@
 ﻿import Link from "next/link";
 import { auth } from "~/server/auth";
 import { api } from "~/trpc/server";
+import { Card, Button } from "~/components/ui";
 
 export default async function HomePage() {
   const session = await auth();
@@ -43,7 +44,7 @@ export default async function HomePage() {
       {/* Cards de Resumo (KPIs) */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
         {/* Total de Veículos em Estoque */}
-        <div className="bg-white rounded-lg shadow-md p-6">
+        <Card>
           <div className="flex items-center">
             <div className="p-3 rounded-full bg-blue-100 mr-4">
               <svg className="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -57,10 +58,10 @@ export default async function HomePage() {
               </p>
             </div>
           </div>
-        </div>
+        </Card>
 
         {/* Valor Total do Estoque */}
-        <div className="bg-white rounded-lg shadow-md p-6">
+        <Card>
           <div className="flex items-center">
             <div className="p-3 rounded-full bg-green-100 mr-4">
               <svg className="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -77,10 +78,10 @@ export default async function HomePage() {
               </p>
             </div>
           </div>
-        </div>
+        </Card>
 
         {/* Veículos Precisando Atenção */}
-        <div className="bg-white rounded-lg shadow-md p-6">
+        <Card className="border-2 border-orange-500">
           <div className="flex items-center">
             <div className="p-3 rounded-full bg-orange-100 mr-4">
               <svg className="w-6 h-6 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -94,48 +95,44 @@ export default async function HomePage() {
               </p>
             </div>
           </div>
-        </div>
+        </Card>
       </div>
 
       {/* Ações Rápidas */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-        <Link
-          href="/veiculos/novo"
-          className="bg-primary text-white p-4 rounded-lg hover:opacity-90 transition-opacity text-center"
-        >
-          <div className="text-lg font-bold font-display">Novo Veículo</div>
-          <div className="text-sm opacity-90">Cadastrar veículo</div>
+        <Link href="/veiculos/novo">
+          <Button variant="primary" className="text-center">
+            <div className="text-lg font-bold font-display">Novo Veículo</div>
+            <div className="text-sm opacity-90">Cadastrar veículo</div>
+          </Button>
         </Link>
 
-        <Link
-          href="/clientes/novo"
-          className="bg-green-600 text-white p-4 rounded-lg hover:opacity-90 transition-opacity text-center"
-        >
-          <div className="text-lg font-bold font-display">Novo Cliente</div>
-          <div className="text-sm opacity-90">Cadastrar cliente</div>
+        <Link href="/clientes/novo">
+          <Button variant="success" className="text-center">
+            <div className="text-lg font-bold font-display">Novo Cliente</div>
+            <div className="text-sm opacity-90">Cadastrar cliente</div>
+          </Button>
         </Link>
 
-        <Link
-          href="/veiculos"
-          className="bg-blue-600 text-white p-4 rounded-lg hover:opacity-90 transition-opacity text-center"
-        >
-          <div className="text-lg font-bold font-display">Ver Estoque</div>
-          <div className="text-sm opacity-90">Gerenciar veículos</div>
+        <Link href="/veiculos">
+          <Button variant="info" className="text-center">
+            <div className="text-lg font-bold font-display">Ver Estoque</div>
+            <div className="text-sm opacity-90">Gerenciar veículos</div>
+          </Button>
         </Link>
 
-        <Link
-          href="/relatorios"
-          className="bg-purple-600 text-white p-4 rounded-lg hover:opacity-90 transition-opacity text-center"
-        >
-          <div className="text-lg font-bold font-display">Relatórios</div>
-          <div className="text-sm opacity-90">Análises e dados</div>
+        <Link href="/relatorios">
+          <Button variant="accent" className="text-center">
+            <div className="text-lg font-bold font-display">Relatórios</div>
+            <div className="text-sm opacity-90">Análises e dados</div>
+          </Button>
         </Link>
       </div>
 
       {/* Resumo de Dados */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Resumo de Veículos */}
-        <div className="bg-white rounded-lg shadow-md p-6">
+        <Card>
           <h3 className="text-lg font-bold font-display text-gray-900 mb-4">
             Resumo de Veículos
           </h3>
@@ -158,10 +155,10 @@ export default async function HomePage() {
               </span>
             </div>
           </div>
-        </div>
+        </Card>
 
         {/* Veículos Recentes */}
-        <div className="bg-white rounded-lg shadow-md p-6">
+        <Card>
           <h3 className="text-lg font-bold font-display text-gray-900 mb-4">
             Veículos Recentes
           </h3>
@@ -185,7 +182,7 @@ export default async function HomePage() {
               <p className="text-gray-500 text-sm">Nenhum veículo encontrado</p>
             )}
           </div>
-        </div>
+        </Card>
       </div>
     </div>
   );

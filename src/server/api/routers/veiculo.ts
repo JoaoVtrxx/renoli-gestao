@@ -1,4 +1,5 @@
 import { z } from "zod";
+import type { Prisma } from "@prisma/client";
 
 import { createTRPCRouter, protectedProcedure } from "~/server/api/trpc";
 import { StatusVeiculo, TipoTransacao } from "@prisma/client";
@@ -45,16 +46,56 @@ export const veiculoRouter = createTRPCRouter({
       });
     }),
 
-  getAll: protectedProcedure.query(async ({ ctx }) => {
-    return ctx.db.veiculo.findMany({
-      orderBy: {
-        createdAt: "desc",
-      },
-      include: {
-        vendedor: true,
-      },
-    });
-  }),
+  getAll: protectedProcedure
+    .input(
+      z.object({
+        termoBusca: z.string().optional(),
+        filtroStatus: z.nativeEnum(StatusVeiculo).optional(),
+      }).optional()
+    )
+    .query(async ({ ctx, input }) => {
+      // Construir cláusula where dinamicamente
+      const where: Prisma.VeiculoWhereInput = {};
+
+      // Filtro por status
+      if (input?.filtroStatus) {
+        where.status = input.filtroStatus;
+      }
+
+      // Busca por termo (marca, modelo, placa)
+      if (input?.termoBusca) {
+        where.OR = [
+          {
+            marca: {
+              contains: input.termoBusca,
+              mode: "insensitive",
+            },
+          },
+          {
+            modelo: {
+              contains: input.termoBusca,
+              mode: "insensitive",
+            },
+          },
+          {
+            placa: {
+              contains: input.termoBusca,
+              mode: "insensitive",
+            },
+          },
+        ];
+      }
+
+      return ctx.db.veiculo.findMany({
+        where,
+        orderBy: {
+          createdAt: "desc",
+        },
+        include: {
+          vendedor: true,
+        },
+      });
+    }),
 
   getById: protectedProcedure
     .input(z.object({ id: z.string() }))
