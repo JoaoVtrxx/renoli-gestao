@@ -1,3 +1,5 @@
+"use client";
+
 import { type InputHTMLAttributes } from "react";
 import clsx from "clsx";
 import InputMask from "react-input-mask";
