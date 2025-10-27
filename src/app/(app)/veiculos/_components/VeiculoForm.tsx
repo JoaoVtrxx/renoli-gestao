@@ -331,7 +331,7 @@ export default function VeiculoForm({ initialData }: VeiculoFormProps) {
                   <Input
                     id="placa"
                     type="text"
-                    mask="aaa-9*99"
+                    maskOptions={{ mask: "aaa-9*99" }}
                     placeholder="ABC-1234"
                     {...form.register("placa")}
                   />

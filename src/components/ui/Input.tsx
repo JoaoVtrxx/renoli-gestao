@@ -1,30 +1,29 @@
 "use client";
 
-import { type InputHTMLAttributes } from "react";
+import React, { type InputHTMLAttributes } from "react";
 import clsx from "clsx";
-import InputMask from "react-input-mask";
+import { useIMask } from "react-imask";
 
 interface InputProps extends InputHTMLAttributes<HTMLInputElement> {
   className?: string;
-  mask?: string;
+  maskOptions?: Parameters<typeof useIMask>[0];
 }
 
-export function Input({ className, mask, ...props }: InputProps) {
+export function Input({ className, maskOptions, ...props }: InputProps) {
   const inputClassName = clsx(
     "w-full bg-background border border-border rounded-lg px-4 py-3 focus:ring-2 focus:ring-primary focus:border-transparent",
     className
   );
 
-  if (mask) {
+  const { ref } = useIMask(maskOptions ?? {});
+
+  if (maskOptions) {
     return (
-      <InputMask mask={mask} {...props}>
-        {(inputProps: InputHTMLAttributes<HTMLInputElement>) => (
-          <input
-            {...inputProps}
-            className={inputClassName}
-          />
-        )}
-      </InputMask>
+      <input
+        {...props}
+        ref={ref as React.RefObject<HTMLInputElement>}
+        className={inputClassName}
+      />
     );
   }
 

@@ -242,7 +242,7 @@ export default function ClienteForm({ initialData }: ClienteFormProps) {
                 <Input
                   id="celular"
                   type="tel"
-                  mask="(99) 99999-9999"
+                  maskOptions={{ mask: "(00) 00000-0000" }}
                   placeholder="(00) 00000-0000"
                   {...form.register("celular")}
                 />
@@ -256,7 +256,7 @@ export default function ClienteForm({ initialData }: ClienteFormProps) {
                 <Input
                   id="telefoneFixo"
                   type="tel"
-                  mask="(99) 9999-9999"
+                  maskOptions={{ mask: "(00) 0000-0000" }}
                   placeholder="(00) 0000-0000"
                   {...form.register("telefoneFixo")}
                 />
@@ -288,7 +288,7 @@ export default function ClienteForm({ initialData }: ClienteFormProps) {
                 <Input
                   id="cep"
                   type="text"
-                  mask="99999-999"
+                  maskOptions={{ mask: "00000-000" }}
                   placeholder="00000-000"
                   {...form.register("cep")}
                 />
