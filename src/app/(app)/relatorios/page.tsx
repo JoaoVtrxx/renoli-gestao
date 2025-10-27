@@ -1,153 +1,98 @@
-"use client";
-
-import { useState } from "react";
-import { api } from "~/trpc/react";
-
-type Cliente = {
-  id: string;
-  nome: string;
-  cpf: string | null;
-  rg: string | null;
-  dataNascimento: Date | null;
-  celular: string;
-  telefoneFixo: string | null;
-  email: string | null;
-  cep: string | null;
-  rua: string | null;
-  numero: string | null;
-  complemento: string | null;
-  bairro: string | null;
-  cidade: string | null;
-  estado: string | null;
-  aceitaMarketing: boolean;
-  observacoesNegocios: string | null;
-  createdAt: Date;
-  updatedAt: Date;
-  profissaoId: string | null;
-  estadoCivilId: string | null;
-};
+import Link from "next/link";
+import { Card, Button } from "~/components/ui";
 
 export default function RelatoriosPage() {
-  const [mesSelecionado, setMesSelecionado] = useState<number>(new Date().getMonth() + 1);
-  
-  const { data: aniversariantes, isLoading, refetch } = api.relatorio.getAniversariantesDoMes.useQuery(
-    { mes: mesSelecionado },
-    { enabled: !!mesSelecionado }
-  );
-
-  const meses = [
-    { valor: 1, nome: "Janeiro" },
-    { valor: 2, nome: "Fevereiro" },
-    { valor: 3, nome: "Março" },
-    { valor: 4, nome: "Abril" },
-    { valor: 5, nome: "Maio" },
-    { valor: 6, nome: "Junho" },
-    { valor: 7, nome: "Julho" },
-    { valor: 8, nome: "Agosto" },
-    { valor: 9, nome: "Setembro" },
-    { valor: 10, nome: "Outubro" },
-    { valor: 11, nome: "Novembro" },
-    { valor: 12, nome: "Dezembro" },
-  ];
-
-  const handleMesChange = (novoMes: number) => {
-    setMesSelecionado(novoMes);
-    void refetch();
-  };
-
   return (
-    <div className="container mx-auto px-4 py-8">
-      <h1 className="text-3xl font-bold text-gray-900 mb-8">Relatórios</h1>
-      
-      <div className="bg-white rounded-lg shadow-md p-6">
-        <h2 className="text-xl font-semibold text-gray-900 mb-6">Aniversariantes do Mês</h2>
-        
-        {/* Seletor de Mês */}
-        <div className="mb-6">
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            Selecione o mês:
-          </label>
-          <select
-            value={mesSelecionado}
-            onChange={(e) => handleMesChange(Number(e.target.value))}
-            className="block w-full max-w-xs px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-            title="Selecione o mês para buscar aniversariantes"
-          >
-            {meses.map((mes) => (
-              <option key={mes.valor} value={mes.valor}>
-                {mes.nome}
-              </option>
-            ))}
-          </select>
+    <div className="flex-1 p-8">
+      <div className="mx-auto max-w-7xl">
+        {/* Header com Breadcrumb */}
+        <div className="mb-8">
+          <nav aria-label="Breadcrumb" className="flex">
+            <ol className="flex items-center space-x-2" role="list">
+              <li>
+                <div>
+                  <a className="text-sm font-medium text-gray-500 hover:text-primary-dark" href="#">
+                    Início
+                  </a>
+                </div>
+              </li>
+              <li>
+                <div className="flex items-center">
+                  <svg className="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                  </svg>
+                  <span className="ml-2 text-sm font-medium text-primary-dark">
+                    Central de Relatórios
+                  </span>
+                </div>
+              </li>
+            </ol>
+          </nav>
+          <h1 className="mt-4 text-3xl font-bold tracking-tight text-primary-dark">
+            Central de Relatórios
+          </h1>
         </div>
 
-        {/* Resultados */}
-        {isLoading ? (
-          <div className="flex items-center justify-center py-8">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-            <span className="ml-2 text-gray-600">Carregando...</span>
-          </div>
-        ) : (
-          <div>
-            {aniversariantes && aniversariantes.length > 0 ? (
-              <div className="overflow-x-auto">
-                <table className="min-w-full divide-y divide-gray-200">
-                  <thead className="bg-gray-50">
-                    <tr>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Nome
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Data de Nascimento
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Celular
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Email
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody className="bg-white divide-y divide-gray-200">
-                    {aniversariantes.map((cliente: Cliente) => (
-                      <tr key={cliente.id} className="hover:bg-gray-50">
-                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                          {cliente.nome}
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                          {cliente.dataNascimento 
-                            ? new Date(cliente.dataNascimento).toLocaleDateString('pt-BR')
-                            : 'Não informado'
-                          }
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                          {cliente.celular ?? 'Não informado'}
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                          {cliente.email ?? 'Não informado'}
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-                
-                <div className="mt-4 text-sm text-gray-600">
-                  {aniversariantes.length} aniversariante(s) encontrado(s) em {meses.find(m => m.valor === mesSelecionado)?.nome}.
-                </div>
-              </div>
-            ) : (
-              <div className="text-center py-8">
-                <svg className="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3a4 4 0 118 0v4m-4 7l4 4m0 0l4-4m-4 4V7" />
-                </svg>
-                <h3 className="mt-2 text-sm font-medium text-gray-900">Nenhum aniversariante</h3>
-                <p className="mt-1 text-sm text-gray-500">
-                  Não há clientes aniversariando em {meses.find(m => m.valor === mesSelecionado)?.nome}.
-                </p>
-              </div>
-            )}
-          </div>
-        )}
+        {/* Grid de Cards de Relatórios */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+          {/* Card 1: Aniversariantes do Mês */}
+          <Card className="p-6 flex flex-col items-center text-center hover:shadow-xl transition-shadow duration-300">
+            <div className="text-primary-dark mb-4">
+              <svg className="w-12 h-12" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v13m0-13V6a2 2 0 112 2h-2zm0 0V5.5A2.5 2.5 0 109.5 8H12zm-7 4h14M5 12a2 2 0 110-4h14a2 2 0 110 4M5 12v7a2 2 0 002 2h10a2 2 0 002-2v-7" />
+              </svg>
+            </div>
+            <h3 className="text-lg font-bold text-primary-dark mb-2">
+              Aniversariantes do Mês
+            </h3>
+            <p className="text-sm text-gray-500 flex-grow mb-6">
+              Lista de clientes que fazem aniversário neste mês.
+            </p>
+            <Link href="/relatorios/aniversariantes" className="w-full">
+              <Button variant="primary" className="text-black w-full">
+                Acessar Relatório
+              </Button>
+            </Link>
+          </Card>
+
+          {/* Card 2: Auditoria de Inserção de Veículos */}
+          <Card className="p-6 flex flex-col items-center text-center hover:shadow-xl transition-shadow duration-300">
+            <div className="text-primary-dark mb-4">
+              <svg className="w-12 h-12" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+              </svg>
+            </div>
+            <h3 className="text-lg font-bold text-primary-dark mb-2">
+              Auditoria de Inserção de Veículos
+            </h3>
+            <p className="text-sm text-gray-500 flex-grow mb-6">
+              Relatório de veículos inseridos no sistema por período.
+            </p>
+            <Link href="/relatorios/auditoria" className="w-full">
+              <Button variant="primary" className="text-black w-full">
+                Acessar Relatório
+              </Button>
+            </Link>
+          </Card>
+
+          {/* Card Placeholder para futuros relatórios */}
+          <Card className="p-6 flex flex-col items-center text-center hover:shadow-xl transition-shadow duration-300 opacity-50">
+            <div className="text-gray-400 mb-4">
+              <svg className="w-12 h-12" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+              </svg>
+            </div>
+            <h3 className="text-lg font-bold text-gray-400 mb-2">
+              Vendas por Modelo
+            </h3>
+            <p className="text-sm text-gray-400 flex-grow mb-6">
+              Análise das vendas por modelo de veículo.
+            </p>
+            <Button variant="secondary" className="w-full" disabled>
+              Em Breve
+            </Button>
+          </Card>
+        </div>
       </div>
     </div>
   );

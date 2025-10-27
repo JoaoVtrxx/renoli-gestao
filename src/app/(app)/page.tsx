@@ -101,28 +101,28 @@ export default async function HomePage() {
       {/* Ações Rápidas */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
         <Link href="/veiculos/novo">
-          <Button variant="primary" className="text-center">
+          <Button variant="primary" size="lg" className="text-center">
             <div className="text-lg font-bold font-display">Novo Veículo</div>
             <div className="text-sm opacity-90">Cadastrar veículo</div>
           </Button>
         </Link>
 
         <Link href="/clientes/novo">
-          <Button variant="success" className="text-center">
+          <Button variant="success" size="lg" className="text-center">
             <div className="text-lg font-bold font-display">Novo Cliente</div>
             <div className="text-sm opacity-90">Cadastrar cliente</div>
           </Button>
         </Link>
 
         <Link href="/veiculos">
-          <Button variant="info" className="text-center">
+          <Button variant="info" size="lg" className="text-center">
             <div className="text-lg font-bold font-display">Ver Estoque</div>
             <div className="text-sm opacity-90">Gerenciar veículos</div>
           </Button>
         </Link>
 
         <Link href="/relatorios">
-          <Button variant="accent" className="text-center">
+          <Button variant="accent" size="lg" className="text-center">
             <div className="text-lg font-bold font-display">Relatórios</div>
             <div className="text-sm opacity-90">Análises e dados</div>
           </Button>

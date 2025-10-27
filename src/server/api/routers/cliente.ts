@@ -33,11 +33,43 @@ const createClienteSchema = z.object({
 });
 
 export const clienteRouter = createTRPCRouter({
-  getAll: protectedProcedure.query(({ ctx }) => {
-    return ctx.db.cliente.findMany({
-      orderBy: { nome: "asc" },
-    });
-  }),
+  getAll: protectedProcedure
+    .input(
+      z.object({
+        termoBusca: z.string().optional(),
+      })
+    )
+    .query(({ ctx, input }) => {
+      const where = input.termoBusca
+        ? {
+            OR: [
+              {
+                nome: {
+                  contains: input.termoBusca,
+                  mode: "insensitive" as const,
+                },
+              },
+              {
+                cpf: {
+                  contains: input.termoBusca,
+                  mode: "insensitive" as const,
+                },
+              },
+              {
+                celular: {
+                  contains: input.termoBusca,
+                  mode: "insensitive" as const,
+                },
+              },
+            ],
+          }
+        : {};
+
+      return ctx.db.cliente.findMany({
+        where,
+        orderBy: { nome: "asc" },
+      });
+    }),
 
   create: protectedProcedure
     .input(createClienteSchema)

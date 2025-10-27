@@ -22,6 +22,24 @@ export const estadoCivilRouter = createTRPCRouter({
       });
     }),
 
+  update: protectedProcedure
+    .input(
+      z.object({
+        id: z.string(),
+        nome: z.string().min(2, "O nome do estado civil é obrigatório"),
+      })
+    )
+    .mutation(async ({ ctx, input }) => {
+      return ctx.db.estadoCivil.update({
+        where: {
+          id: input.id,
+        },
+        data: {
+          nome: input.nome,
+        },
+      });
+    }),
+
   delete: protectedProcedure
     .input(
       z.object({

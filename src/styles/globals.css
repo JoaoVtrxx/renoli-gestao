@@ -5,7 +5,14 @@
     "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
   --font-display: "Inter", sans-serif;
   
-  --color-primary: #133d90;
-  --color-sidebar: #0B2A4F;
-  --color-background: #f6f6f8;
+  --color-primary: #f9d924; /* O novo amarelo principal */
+  --color-brand-blue: #133d90; /* O azul que já tínhamos */
+  --color-sidebar: #0B2A4F; /* O azul escuro da sidebar */
+  
+  --color-background: #f8f8f5; /* O novo fundo claro */
+  --color-foreground: #181711; /* O novo texto principal (escuro) */
+  --color-muted: #8c855f; /* O novo texto secundário (cinza/bege) */
+  
+  --color-card: #ffffff; /* O fundo dos cards */
+  --color-border: #e6e4db; /* A cor das bordas */
 }

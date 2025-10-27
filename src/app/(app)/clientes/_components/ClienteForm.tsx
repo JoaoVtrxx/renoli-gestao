@@ -7,6 +7,7 @@ import { api } from "~/trpc/react";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
+import { Label, Input, Select, Textarea, Button } from "~/components/ui";
 
 const createClienteSchema = z.object({
   // Informações Básicas
@@ -135,109 +136,138 @@ export default function ClienteForm({ initialData }: ClienteFormProps) {
           </div>
         </div>
 
-        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-          {/* Informações Básicas */}
-          <div className="border-b pb-4">
-            <h2 className="text-lg font-semibold text-gray-700 mb-4">Informações Básicas</h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-10">
+          {/* Dados Pessoais */}
+          <div className="space-y-6">
+            <h2 className="text-xl font-bold text-primary-dark border-b border-gray-200 pb-2">
+              Dados Pessoais
+            </h2>
+            <div className="grid grid-cols-1 gap-6">
               <div>
-                <label htmlFor="nome" className="block text-sm font-medium text-gray-700 mb-1">
-                  Nome Completo *
-                </label>
-                <input
+                <Label htmlFor="nome">
+                  Nome Completo <span className="text-red-500">*</span>
+                </Label>
+                <Input
                   id="nome"
                   type="text"
-                  className="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  placeholder="João Silva"
+                  placeholder="Digite o nome completo"
                   {...form.register("nome")}
                 />
                 {form.formState.errors.nome && (
                   <p className="text-red-500 text-sm mt-1">{form.formState.errors.nome.message}</p>
                 )}
               </div>
-
-              <div>
-                <label htmlFor="cpf" className="block text-sm font-medium text-gray-700 mb-1">
-                  CPF
-                </label>
-                <input
-                  id="cpf"
-                  type="text"
-                  className="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  placeholder="000.000.000-00"
-                  {...form.register("cpf")}
-                />
+              
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div>
+                  <Label htmlFor="cpf">CPF/CNPJ</Label>
+                  <Input
+                    id="cpf"
+                    type="text"
+                    placeholder="Digite o CPF ou CNPJ"
+                    {...form.register("cpf")}
+                  />
+                </div>
+                
+                <div>
+                  <Label htmlFor="rg">RG</Label>
+                  <Input
+                    id="rg"
+                    type="text"
+                    placeholder="Digite o RG"
+                    {...form.register("rg")}
+                  />
+                </div>
+                
+                <div>
+                  <Label htmlFor="dataNascimento">Data de Nascimento</Label>
+                  <Input
+                    id="dataNascimento"
+                    type="date"
+                    {...form.register("dataNascimento")}
+                  />
+                </div>
               </div>
-
-              <div>
-                <label htmlFor="rg" className="block text-sm font-medium text-gray-700 mb-1">
-                  RG
-                </label>
-                <input
-                  id="rg"
-                  type="text"
-                  className="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  placeholder="00.000.000-0"
-                  {...form.register("rg")}
-                />
-              </div>
-
-              <div>
-                <label htmlFor="dataNascimento" className="block text-sm font-medium text-gray-700 mb-1">
-                  Data de Nascimento
-                </label>
-                <input
-                  id="dataNascimento"
-                  type="date"
-                  className="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  {...form.register("dataNascimento")}
-                />
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                  <Label htmlFor="profissaoId">Profissão</Label>
+                  <Select
+                    id="profissaoId"
+                    disabled={isLoadingProfissoes}
+                    {...form.register("profissaoId")}
+                  >
+                    <option value="">
+                      {isLoadingProfissoes ? "Carregando profissões..." : "Selecione a profissão"}
+                    </option>
+                    {profissoes?.map((profissao) => (
+                      <option key={profissao.id} value={profissao.id}>
+                        {profissao.nome}
+                      </option>
+                    ))}
+                  </Select>
+                </div>
+                
+                <div>
+                  <Label htmlFor="estadoCivilId">Estado Civil</Label>
+                  <Select
+                    id="estadoCivilId"
+                    disabled={isLoadingEstadosCivis}
+                    {...form.register("estadoCivilId")}
+                  >
+                    <option value="">
+                      {isLoadingEstadosCivis ? "Carregando estados civis..." : "Selecione o estado civil"}
+                    </option>
+                    {estadosCivis?.map((estadoCivil) => (
+                      <option key={estadoCivil.id} value={estadoCivil.id}>
+                        {estadoCivil.nome}
+                      </option>
+                    ))}
+                  </Select>
+                </div>
               </div>
             </div>
           </div>
 
           {/* Informações de Contato */}
-          <div className="border-b pb-4">
-            <h2 className="text-lg font-semibold text-gray-700 mb-4">Informações de Contato</h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="space-y-6">
+            <h2 className="text-xl font-bold text-primary-dark border-b border-gray-200 pb-2">
+              Informações de Contato
+            </h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
-                <label htmlFor="celular" className="block text-sm font-medium text-gray-700 mb-1">
-                  Celular *
-                </label>
-                <input
+                <Label htmlFor="celular">
+                  Telefone Celular <span className="text-red-500">*</span>
+                </Label>
+                <Input
                   id="celular"
                   type="tel"
-                  className="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  placeholder="(11) 99999-9999"
+                  mask="(99) 99999-9999"
+                  placeholder="(00) 00000-0000"
                   {...form.register("celular")}
                 />
                 {form.formState.errors.celular && (
                   <p className="text-red-500 text-sm mt-1">{form.formState.errors.celular.message}</p>
                 )}
               </div>
-
+              
               <div>
-                <label htmlFor="telefoneFixo" className="block text-sm font-medium text-gray-700 mb-1">
-                  Telefone Fixo
-                </label>
-                <input
+                <Label htmlFor="telefoneFixo">Telefone Fixo</Label>
+                <Input
                   id="telefoneFixo"
                   type="tel"
-                  className="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  placeholder="(11) 3333-3333"
+                  mask="(99) 9999-9999"
+                  placeholder="(00) 0000-0000"
                   {...form.register("telefoneFixo")}
                 />
               </div>
-
+              
               <div className="md:col-span-2">
-                <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
-                  Email
-                </label>
-                <input
+                <Label htmlFor="email">E-mail</Label>
+                <Input
                   id="email"
                   type="email"
-                  className="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  placeholder="joao@email.com"
+                  placeholder="Digite o e-mail"
                   {...form.register("email")}
                 />
                 {form.formState.errors.email && (
@@ -248,94 +278,76 @@ export default function ClienteForm({ initialData }: ClienteFormProps) {
           </div>
 
           {/* Endereço */}
-          <div className="border-b pb-4">
-            <h2 className="text-lg font-semibold text-gray-700 mb-4">Endereço</h2>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div>
-                <label htmlFor="cep" className="block text-sm font-medium text-gray-700 mb-1">
-                  CEP
-                </label>
-                <input
+          <div className="space-y-6">
+            <h2 className="text-xl font-bold text-primary-dark border-b border-gray-200 pb-2">
+              Endereço
+            </h2>
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+              <div className="md:col-span-1">
+                <Label htmlFor="cep">CEP</Label>
+                <Input
                   id="cep"
                   type="text"
-                  className="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  mask="99999-999"
                   placeholder="00000-000"
                   {...form.register("cep")}
                 />
               </div>
-
-              <div className="md:col-span-2">
-                <label htmlFor="rua" className="block text-sm font-medium text-gray-700 mb-1">
-                  Rua/Logradouro
-                </label>
-                <input
+              
+              <div className="md:col-span-3">
+                <Label htmlFor="rua">Rua/Logradouro</Label>
+                <Input
                   id="rua"
                   type="text"
-                  className="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  placeholder="Rua das Flores"
+                  placeholder="Digite a rua ou logradouro"
                   {...form.register("rua")}
                 />
               </div>
-
-              <div>
-                <label htmlFor="numero" className="block text-sm font-medium text-gray-700 mb-1">
-                  Número
-                </label>
-                <input
+              
+              <div className="md:col-span-1">
+                <Label htmlFor="numero">Número</Label>
+                <Input
                   id="numero"
                   type="text"
-                  className="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  placeholder="123"
+                  placeholder="Nº"
                   {...form.register("numero")}
                 />
               </div>
-
-              <div>
-                <label htmlFor="complemento" className="block text-sm font-medium text-gray-700 mb-1">
-                  Complemento
-                </label>
-                <input
+              
+              <div className="md:col-span-3">
+                <Label htmlFor="complemento">Complemento</Label>
+                <Input
                   id="complemento"
                   type="text"
-                  className="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  placeholder="Apto 45"
+                  placeholder="Apto, bloco, etc."
                   {...form.register("complemento")}
                 />
               </div>
-
+              
               <div>
-                <label htmlFor="bairro" className="block text-sm font-medium text-gray-700 mb-1">
-                  Bairro
-                </label>
-                <input
+                <Label htmlFor="bairro">Bairro</Label>
+                <Input
                   id="bairro"
                   type="text"
-                  className="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  placeholder="Centro"
+                  placeholder="Digite o bairro"
                   {...form.register("bairro")}
                 />
               </div>
-
+              
               <div>
-                <label htmlFor="cidade" className="block text-sm font-medium text-gray-700 mb-1">
-                  Cidade
-                </label>
-                <input
+                <Label htmlFor="cidade">Cidade</Label>
+                <Input
                   id="cidade"
                   type="text"
-                  className="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  placeholder="São Paulo"
+                  placeholder="Digite a cidade"
                   {...form.register("cidade")}
                 />
               </div>
-
+              
               <div>
-                <label htmlFor="estado" className="block text-sm font-medium text-gray-700 mb-1">
-                  Estado
-                </label>
-                <select
+                <Label htmlFor="estado">Estado (UF)</Label>
+                <Select
                   id="estado"
-                  className="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   {...form.register("estado")}
                 >
                   <option value="">Selecione</option>
@@ -366,100 +378,58 @@ export default function ClienteForm({ initialData }: ClienteFormProps) {
                   <option value="SP">São Paulo</option>
                   <option value="SE">Sergipe</option>
                   <option value="TO">Tocantins</option>
-                </select>
+                </Select>
               </div>
             </div>
           </div>
 
-          {/* Marketing e Observações */}
-          <div>
-            <h2 className="text-lg font-semibold text-gray-700 mb-4">Informações Adicionais</h2>
+          {/* Preferências e Marketing */}
+          <div className="space-y-6">
+            <h2 className="text-xl font-bold text-primary-dark border-b border-gray-200 pb-2">
+              Preferências e Marketing
+            </h2>
             <div className="space-y-4">
-              <div>
-                <label htmlFor="profissaoId" className="block text-sm font-medium text-gray-700 mb-1">
-                  Profissão
-                </label>
-                <select
-                  id="profissaoId"
-                  className="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  disabled={isLoadingProfissoes}
-                  {...form.register("profissaoId")}
-                >
-                  <option value="">
-                    {isLoadingProfissoes ? "Carregando profissões..." : "Selecione uma profissão"}
-                  </option>
-                  {profissoes?.map((profissao) => (
-                    <option key={profissao.id} value={profissao.id}>
-                      {profissao.nome}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              <div>
-                <label htmlFor="estadoCivilId" className="block text-sm font-medium text-gray-700 mb-1">
-                  Estado Civil
-                </label>
-                <select
-                  id="estadoCivilId"
-                  className="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  disabled={isLoadingEstadosCivis}
-                  {...form.register("estadoCivilId")}
-                >
-                  <option value="">
-                    {isLoadingEstadosCivis ? "Carregando estados civis..." : "Selecione um estado civil"}
-                  </option>
-                  {estadosCivis?.map((estadoCivil) => (
-                    <option key={estadoCivil.id} value={estadoCivil.id}>
-                      {estadoCivil.nome}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
               <div className="flex items-center">
                 <input
                   id="aceitaMarketing"
                   type="checkbox"
-                  className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                  className="form-checkbox h-4 w-4 rounded bg-white border-gray-300 text-primary focus:ring-primary"
                   {...form.register("aceitaMarketing")}
                 />
-                <label htmlFor="aceitaMarketing" className="ml-2 block text-sm text-gray-700">
-                  Aceita receber materiais de marketing
-                </label>
+                <Label htmlFor="aceitaMarketing" className="ml-2 text-sm">
+                  Aceita receber comunicação e marketing?
+                </Label>
               </div>
-
+              
               <div>
-                <label htmlFor="observacoesNegocios" className="block text-sm font-medium text-gray-700 mb-1">
-                  Observações de Negócios
-                </label>
-                <textarea
+                <Label htmlFor="observacoesNegocios">Anotações de Negócios</Label>
+                <Textarea
                   id="observacoesNegocios"
                   rows={4}
-                  className="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  placeholder="Observações importantes sobre o cliente..."
+                  placeholder="Digite suas anotações aqui..."
                   {...form.register("observacoesNegocios")}
                 />
               </div>
             </div>
           </div>
 
-          {/* Botão de Submit */}
-          <div className="flex justify-end pt-4">
-            <button
-              type="submit"
-              disabled={isPending}
-              className="bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 text-white font-semibold py-3 px-8 rounded-md transition-colors duration-200 flex items-center gap-2"
+          {/* Botões de Ação */}
+          <div className="flex items-center justify-end gap-4 pt-6">
+            <Button
+              type="button"
+              variant="secondary"
+              onClick={() => router.back()}
             >
-              {isPending ? (
-                <>
-                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-                  Salvando...
-                </>
-              ) : (
-                initialData ? "Atualizar Cliente" : "Salvar Cliente"
-              )}
-            </button>
+              Cancelar
+            </Button>
+            <Button
+              type="submit"
+              variant="primary"
+              className="text-black"
+              disabled={isPending}
+            >
+              {isPending ? 'Salvando...' : (initialData ? 'Atualizar Cliente' : 'Salvar Cliente')}
+            </Button>
           </div>
         </form>
       </div>

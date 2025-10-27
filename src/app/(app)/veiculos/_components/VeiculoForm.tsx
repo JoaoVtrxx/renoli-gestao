@@ -12,6 +12,7 @@ import { useDropzone } from "react-dropzone";
 import Image from "next/image";
 import { env } from "~/env";
 import toast from "react-hot-toast";
+import { Input, Label, Select, Textarea, Card, Button } from "~/components/ui";
 
 const createVeiculoSchema = z.object({
   placa: z.string().min(7, "A placa deve ter no mínimo 7 caracteres"),
@@ -135,7 +136,17 @@ export default function VeiculoForm({ initialData }: VeiculoFormProps) {
     },
   });
 
-  const isPending = isCreating || isUpdating;
+  const { mutate: deleteVeiculo, isPending: isDeleting } = api.veiculo.delete.useMutation({
+    onSuccess: () => {
+      toast.success("Veículo excluído com sucesso!");
+      router.push("/veiculos");
+    },
+    onError: (_error) => {
+      toast.error("Houve um erro ao excluir o veículo.");
+    },
+  });
+
+  const isPending = isCreating || isUpdating || isDeleting;
 
   function onSubmit(data: CreateVeiculoInput) {
     if (initialData?.id) {
@@ -150,7 +161,7 @@ export default function VeiculoForm({ initialData }: VeiculoFormProps) {
     }
   }
 
-  const { data: clientes, isLoading: isLoadingClientes } = api.cliente.getAll.useQuery();
+  const { data: clientes, isLoading: isLoadingClientes } = api.cliente.getAll.useQuery({});
 
   useEffect(() => {
     if (status === "loading") return;
@@ -172,340 +183,337 @@ export default function VeiculoForm({ initialData }: VeiculoFormProps) {
   }
 
   return (
-    <main className="container mx-auto p-4 max-w-4xl">
-      <div className="bg-white rounded-lg shadow-md p-6">
-        <div className="flex justify-between items-center mb-6">
-          <h1 className="text-3xl font-bold text-gray-800">
-            {initialData ? "Editar Veículo" : "Cadastrar Novo Veículo"}
-          </h1>
-          <div className="text-sm text-gray-600">
-            Usuário: <span className="font-semibold text-blue-600">{session.user?.name}</span>
-          </div>
-        </div>
+    <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className="mb-6">
+        <p className="text-sm text-muted">
+          <a className="hover:underline" href="/veiculos">Meu Estoque</a>
+          <span className="mx-2">/</span>
+          <span className="text-foreground">{initialData ? "Editar Veículo" : "Cadastrar Novo Veículo"}</span>
+        </p>
+        <h1 className="text-3xl font-bold mt-2">{initialData ? "Editar Veículo" : "Cadastrar Novo Veículo"}</h1>
+      </div>
 
-        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-          {/* Informações Básicas */}
-          <div className="border-b pb-4">
-            <h2 className="text-lg font-semibold text-gray-700 mb-4">Informações Básicas</h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <label htmlFor="placa" className="block text-sm font-medium text-gray-700 mb-1">
-                  Placa *
-                </label>
-                <input
-                  id="placa"
-                  type="text"
-                  className="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  placeholder="ABC-1234"
-                  {...form.register("placa")}
-                />
-                {form.formState.errors.placa && (
-                  <p className="text-red-500 text-sm mt-1">{form.formState.errors.placa.message}</p>
-                )}
-              </div>
-
-              <div>
-                <label htmlFor="marca" className="block text-sm font-medium text-gray-700 mb-1">
-                  Marca *
-                </label>
-                <input
-                  id="marca"
-                  type="text"
-                  className="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  placeholder="Volkswagen"
-                  {...form.register("marca")}
-                />
-                {form.formState.errors.marca && (
-                  <p className="text-red-500 text-sm mt-1">{form.formState.errors.marca.message}</p>
-                )}
-              </div>
-
-              <div>
-                <label htmlFor="modelo" className="block text-sm font-medium text-gray-700 mb-1">
-                  Modelo *
-                </label>
-                <input
-                  id="modelo"
-                  type="text"
-                  className="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  placeholder="Polo"
-                  {...form.register("modelo")}
-                />
-                {form.formState.errors.modelo && (
-                  <p className="text-red-500 text-sm mt-1">{form.formState.errors.modelo.message}</p>
-                )}
-              </div>
-
-              <div>
-                <label htmlFor="cor" className="block text-sm font-medium text-gray-700 mb-1">
-                  Cor *
-                </label>
-                <input
-                  id="cor"
-                  type="text"
-                  className="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  placeholder="Branco"
-                  {...form.register("cor")}
-                />
-                {form.formState.errors.cor && (
-                  <p className="text-red-500 text-sm mt-1">{form.formState.errors.cor.message}</p>
-                )}
-              </div>
-            </div>
-          </div>
-
-          {/* Especificações Técnicas */}
-          <div className="border-b pb-4">
-            <h2 className="text-lg font-semibold text-gray-700 mb-4">Especificações Técnicas</h2>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div>
-                <label htmlFor="anoFabricacao" className="block text-sm font-medium text-gray-700 mb-1">
-                  Ano Fabricação *
-                </label>
-                <input
-                  id="anoFabricacao"
-                  type="number"
-                  className="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  {...form.register("anoFabricacao")}
-                />
-                {form.formState.errors.anoFabricacao && (
-                  <p className="text-red-500 text-sm mt-1">{form.formState.errors.anoFabricacao.message}</p>
-                )}
-              </div>
-
-              <div>
-                <label htmlFor="anoModelo" className="block text-sm font-medium text-gray-700 mb-1">
-                  Ano Modelo *
-                </label>
-                <input
-                  id="anoModelo"
-                  type="number"
-                  className="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  {...form.register("anoModelo")}
-                />
-                {form.formState.errors.anoModelo && (
-                  <p className="text-red-500 text-sm mt-1">{form.formState.errors.anoModelo.message}</p>
-                )}
-              </div>
-
-              <div>
-                <label htmlFor="km" className="block text-sm font-medium text-gray-700 mb-1">
-                  Quilometragem *
-                </label>
-                <input
-                  id="km"
-                  type="number"
-                  className="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  {...form.register("km")}
-                />
-                {form.formState.errors.km && (
-                  <p className="text-red-500 text-sm mt-1">{form.formState.errors.km.message}</p>
-                )}
-              </div>
-
-              <div>
-                <label htmlFor="cambio" className="block text-sm font-medium text-gray-700 mb-1">
-                  Câmbio *
-                </label>
-                <select
-                  id="cambio"
-                  className="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  {...form.register("cambio")}
-                >
-                  <option value="">Selecione</option>
-                  <option value="manual">Manual</option>
-                  <option value="automatico">Automático</option>
-                  <option value="cvt">CVT</option>
-                </select>
-                {form.formState.errors.cambio && (
-                  <p className="text-red-500 text-sm mt-1">{form.formState.errors.cambio.message}</p>
-                )}
-              </div>
-
-              <div>
-                <label htmlFor="combustivel" className="block text-sm font-medium text-gray-700 mb-1">
-                  Combustível *
-                </label>
-                <select
-                  id="combustivel"
-                  className="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  {...form.register("combustivel")}
-                >
-                  <option value="">Selecione</option>
-                  <option value="gasolina">Gasolina</option>
-                  <option value="etanol">Etanol</option>
-                  <option value="flex">Flex</option>
-                  <option value="diesel">Diesel</option>
-                  <option value="eletrico">Elétrico</option>
-                  <option value="hibrido">Híbrido</option>
-                </select>
-                {form.formState.errors.combustivel && (
-                  <p className="text-red-500 text-sm mt-1">{form.formState.errors.combustivel.message}</p>
-                )}
-              </div>
-
-              <div>
-                <label htmlFor="portas" className="block text-sm font-medium text-gray-700 mb-1">
-                  Portas *
-                </label>
-                <input
-                  id="portas"
-                  type="number"
-                  className="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  {...form.register("portas")}
-                />
-                {form.formState.errors.portas && (
-                  <p className="text-red-500 text-sm mt-1">{form.formState.errors.portas.message}</p>
-                )}
-              </div>
-            </div>
-          </div>
-
-          {/* Informações Comerciais */}
-          <div className="border-b pb-4">
-            <h2 className="text-lg font-semibold text-gray-700 mb-4">Informações Comerciais</h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <label htmlFor="clienteIdVendedor" className="block text-sm font-medium text-gray-700 mb-1">
-                  Cliente Vendedor *
-                </label>
-                <select
-                  id="clienteIdVendedor"
-                  className="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  {...form.register("clienteIdVendedor")}
-                >
-                  <option value="">Selecione um cliente</option>
-                  {isLoadingClientes ? (
-                    <option>Carregando...</option>
-                  ) : (
-                    clientes?.map((cliente) => (
-                      <option key={cliente.id} value={cliente.id}>
-                        {cliente.nome}
-                      </option>
-                    ))
+      <form onSubmit={form.handleSubmit(onSubmit)}>
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          <div className="lg:col-span-2 space-y-8">
+            {/* Informações Básicas do Veículo */}
+            <Card>
+              <h2 className="text-xl font-bold mb-6">Informações Básicas do Veículo</h2>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="space-y-1">
+                  <Label htmlFor="marca">Marca</Label>
+                  <Input
+                    id="marca"
+                    type="text"
+                    placeholder="Selecione a marca"
+                    {...form.register("marca")}
+                  />
+                  {form.formState.errors.marca && (
+                    <p className="text-red-500 text-sm mt-1">{form.formState.errors.marca.message}</p>
                   )}
-                </select>
-                {form.formState.errors.clienteIdVendedor && (
-                  <p className="text-red-500 text-sm mt-1">{form.formState.errors.clienteIdVendedor.message}</p>
-                )}
+                </div>
+
+                <div className="space-y-1">
+                  <Label htmlFor="modelo">Modelo</Label>
+                  <Input
+                    id="modelo"
+                    type="text"
+                    placeholder="Selecione o modelo"
+                    {...form.register("modelo")}
+                  />
+                  {form.formState.errors.modelo && (
+                    <p className="text-red-500 text-sm mt-1">{form.formState.errors.modelo.message}</p>
+                  )}
+                </div>
+
+                <div className="space-y-1">
+                  <Label htmlFor="versao">Versão</Label>
+                  <Input
+                    id="versao"
+                    type="text"
+                    placeholder="Selecione a versão"
+                  />
+                </div>
+
+                <div className="space-y-1">
+                  <Label htmlFor="ano">Ano</Label>
+                  <div className="grid grid-cols-2 gap-2">
+                    <Input
+                      id="anoFabricacao"
+                      type="number"
+                      placeholder="Fabricação"
+                      {...form.register("anoFabricacao")}
+                    />
+                    <Input
+                      id="anoModelo"
+                      type="number"
+                      placeholder="Modelo"
+                      {...form.register("anoModelo")}
+                    />
+                  </div>
+                  {(form.formState.errors.anoFabricacao ?? form.formState.errors.anoModelo) && (
+                    <p className="text-red-500 text-sm mt-1">
+                      {form.formState.errors.anoFabricacao?.message ?? form.formState.errors.anoModelo?.message}
+                    </p>
+                  )}
+                </div>
+
+                <div className="space-y-1">
+                  <Label htmlFor="cor">Cor</Label>
+                  <Input
+                    id="cor"
+                    type="text"
+                    placeholder="Selecione a cor"
+                    {...form.register("cor")}
+                  />
+                  {form.formState.errors.cor && (
+                    <p className="text-red-500 text-sm mt-1">{form.formState.errors.cor.message}</p>
+                  )}
+                </div>
+
+                <div className="space-y-1">
+                  <Label htmlFor="km">KM</Label>
+                  <Input
+                    id="km"
+                    type="number"
+                    placeholder="Digite a quilometragem"
+                    {...form.register("km")}
+                  />
+                  {form.formState.errors.km && (
+                    <p className="text-red-500 text-sm mt-1">{form.formState.errors.km.message}</p>
+                  )}
+                </div>
+
+                <div className="space-y-1">
+                  <Label htmlFor="cambio">Câmbio</Label>
+                  <Select id="cambio" {...form.register("cambio")}>
+                    <option value="">Selecione o tipo de câmbio</option>
+                    <option value="manual">Manual</option>
+                    <option value="automatico">Automático</option>
+                    <option value="cvt">CVT</option>
+                  </Select>
+                  {form.formState.errors.cambio && (
+                    <p className="text-red-500 text-sm mt-1">{form.formState.errors.cambio.message}</p>
+                  )}
+                </div>
+
+                <div className="space-y-1">
+                  <Label htmlFor="portas">Número de Portas</Label>
+                  <Input
+                    id="portas"
+                    type="number"
+                    placeholder="Digite o número de portas"
+                    {...form.register("portas")}
+                  />
+                  {form.formState.errors.portas && (
+                    <p className="text-red-500 text-sm mt-1">{form.formState.errors.portas.message}</p>
+                  )}
+                </div>
+
+                <div className="space-y-1">
+                  <Label htmlFor="combustivel">Combustível</Label>
+                  <Select id="combustivel" {...form.register("combustivel")}>
+                    <option value="">Selecione o tipo de combustível</option>
+                    <option value="gasolina">Gasolina</option>
+                    <option value="etanol">Etanol</option>
+                    <option value="flex">Flex</option>
+                    <option value="diesel">Diesel</option>
+                    <option value="eletrico">Elétrico</option>
+                    <option value="hibrido">Híbrido</option>
+                  </Select>
+                  {form.formState.errors.combustivel && (
+                    <p className="text-red-500 text-sm mt-1">{form.formState.errors.combustivel.message}</p>
+                  )}
+                </div>
+
+                <div className="space-y-1">
+                  <Label htmlFor="placa">Placa</Label>
+                  <Input
+                    id="placa"
+                    type="text"
+                    mask="aaa-9*99"
+                    placeholder="ABC-1234"
+                    {...form.register("placa")}
+                  />
+                  {form.formState.errors.placa && (
+                    <p className="text-red-500 text-sm mt-1">{form.formState.errors.placa.message}</p>
+                  )}
+                </div>
+
+                <div className="space-y-1">
+                  <Label htmlFor="chassi">Chassi</Label>
+                  <Input
+                    id="chassi"
+                    type="text"
+                    placeholder="Digite o chassi"
+                  />
+                </div>
+
+                <div className="space-y-1 md:col-span-2">
+                  <Label htmlFor="renavam">RENAVAM</Label>
+                  <Input
+                    id="renavam"
+                    type="text"
+                    placeholder="Digite o RENAVAM"
+                  />
+                </div>
+              </div>
+            </Card>
+
+            {/* Preços e Status */}
+            <Card>
+              <h2 className="text-xl font-bold mb-6">Preços e Status</h2>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                <div className="space-y-1">
+                  <Label htmlFor="precoVenda">Preço de Venda</Label>
+                  <Input
+                    id="precoVenda"
+                    type="number"
+                    step="0.01"
+                    placeholder="R$ 0,00"
+                    {...form.register("precoVenda")}
+                  />
+                  {form.formState.errors.precoVenda && (
+                    <p className="text-red-500 text-sm mt-1">{form.formState.errors.precoVenda.message}</p>
+                  )}
+                </div>
+
+                <div className="space-y-1">
+                  <Label htmlFor="precoCusto">Preço de Custo</Label>
+                  <Input
+                    id="precoCusto"
+                    type="number"
+                    step="0.01"
+                    placeholder="R$ 0,00"
+                  />
+                </div>
               </div>
 
               <div>
-                <label htmlFor="precoVenda" className="block text-sm font-medium text-gray-700 mb-1">
-                  Preço de Venda *
-                </label>
-                <input
-                  id="precoVenda"
-                  type="number"
-                  step="0.01"
-                  className="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  {...form.register("precoVenda")}
-                />
-                {form.formState.errors.precoVenda && (
-                  <p className="text-red-500 text-sm mt-1">{form.formState.errors.precoVenda.message}</p>
-                )}
+                <p className="text-sm font-medium mb-2">Status</p>
+                <div className="flex gap-4">
+                  <label className="flex items-center px-4 py-2 rounded-lg border-2 border-border has-[:checked]:border-primary has-[:checked]:bg-primary/10 cursor-pointer transition-colors">
+                    <input 
+                      type="radio" 
+                      value="DISPONIVEL"
+                      {...form.register("status")}
+                      className="sr-only"
+                    />
+                    <span className="font-medium">Disponível</span>
+                  </label>
+                  <label className="flex items-center px-4 py-2 rounded-lg border-2 border-border has-[:checked]:border-primary has-[:checked]:bg-primary/10 cursor-pointer transition-colors">
+                    <input 
+                      type="radio" 
+                      value="RESERVADO"
+                      {...form.register("status")}
+                      className="sr-only"
+                    />
+                    <span className="font-medium">Reservado</span>
+                  </label>
+                  <label className="flex items-center px-4 py-2 rounded-lg border-2 border-border has-[:checked]:border-primary has-[:checked]:bg-primary/10 cursor-pointer transition-colors">
+                    <input 
+                      type="radio" 
+                      value="VENDIDO"
+                      {...form.register("status")}
+                      className="sr-only"
+                    />
+                    <span className="font-medium">Vendido</span>
+                  </label>
+                </div>
               </div>
+            </Card>
 
-              <div>
-                <label htmlFor="status" className="block text-sm font-medium text-gray-700 mb-1">
-                  Status
-                </label>
-                <select
-                  id="status"
-                  className="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  {...form.register("status")}
-                >
-                  <option value="DISPONIVEL">Disponível</option>
-                  <option value="RESERVADO">Reservado</option>
-                  <option value="VENDIDO">Vendido</option>
-                </select>
-              </div>
+            {/* Dados de Aquisição */}
+            <Card>
+              <h2 className="text-xl font-bold mb-6">Dados de Aquisição</h2>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="space-y-1">
+                  <Label htmlFor="tipoTransacao">Tipo de Transação <span className="text-red-500">*</span></Label>
+                  <Select id="tipoTransacao" {...form.register("tipoTransacao")} required>
+                    <option value="" disabled>Selecione o tipo</option>
+                    <option value="COMPRA">Compra</option>
+                    <option value="CONSIGNACAO">Consignação</option>
+                    <option value="LOJA">Loja</option>
+                  </Select>
+                  {form.formState.errors.tipoTransacao && (
+                    <p className="text-red-500 text-sm mt-1">{form.formState.errors.tipoTransacao.message}</p>
+                  )}
+                </div>
 
-              <div>
-                <label htmlFor="tipoTransacao" className="block text-sm font-medium text-gray-700 mb-1">
-                  Tipo Transação
-                </label>
-                <select
-                  id="tipoTransacao"
-                  className="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  {...form.register("tipoTransacao")}
-                >
-                  <option value="COMPRA">Compra</option>
-                  <option value="CONSIGNACAO">Consignação</option>
-                  <option value="LOJA">Loja</option>
-                </select>
-              </div>
-            </div>
-          </div>
-
-          {/* Descrições */}
-          <div>
-            <h2 className="text-lg font-semibold text-gray-700 mb-4">Descrições</h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <label htmlFor="descricaoAnuncio" className="block text-sm font-medium text-gray-700 mb-1">
-                  Descrição para Anúncio
-                </label>
-                <textarea
-                  id="descricaoAnuncio"
-                  rows={4}
-                  className="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  placeholder="Descrição que aparecerá no anúncio..."
-                  {...form.register("descricaoAnuncio")}
-                />
-              </div>
-
-              <div>
-                <label htmlFor="observacoesInternas" className="block text-sm font-medium text-gray-700 mb-1">
-                  Observações Internas
-                </label>
-                <textarea
-                  id="observacoesInternas"
-                  rows={4}
-                  className="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  placeholder="Observações internas (não aparecerão no anúncio)..."
-                  {...form.register("observacoesInternas")}
-                />
-              </div>
-            </div>
-          </div>
-
-          {/* Fotos do Veículo */}
-          <div className="border-b pb-4">
-            <h2 className="text-lg font-semibold text-gray-700 mb-4">Fotos do Veículo</h2>
-            
-            {/* Área de Upload */}
-            <div 
-              {...getRootProps()} 
-              className={`border-2 border-dashed rounded-lg p-8 text-center cursor-pointer transition-colors ${
-                isDragActive 
-                  ? 'border-blue-500 bg-blue-50' 
-                  : 'border-gray-300 hover:border-gray-400'
-              }`}
-            >
-              <input {...getInputProps()} />
-              <div className="space-y-2">
-                <div className="text-gray-500">
-                  {isDragActive ? (
-                    <p>Solte as imagens aqui...</p>
-                  ) : (
-                    <div>
-                      <p>Arraste e solte imagens aqui ou <span className="text-blue-600 font-medium">clique para selecionar</span></p>
-                      <p className="text-sm text-gray-400">Formatos aceitos: JPEG, PNG, WebP</p>
-                    </div>
+                <div className="space-y-1">
+                  <Label htmlFor="clienteIdVendedor">Cliente Vendedor</Label>
+                  <Select id="clienteIdVendedor" {...form.register("clienteIdVendedor")}>
+                    <option value="">Selecione um cliente</option>
+                    {isLoadingClientes ? (
+                      <option>Carregando...</option>
+                    ) : (
+                      clientes?.map((cliente) => (
+                        <option key={cliente.id} value={cliente.id}>
+                          {cliente.nome}
+                        </option>
+                      ))
+                    )}
+                  </Select>
+                  {form.formState.errors.clienteIdVendedor && (
+                    <p className="text-red-500 text-sm mt-1">{form.formState.errors.clienteIdVendedor.message}</p>
                   )}
                 </div>
               </div>
-            </div>
+            </Card>
 
-            {/* Grade de Fotos */}
-            {fotosUrls.length > 0 && (
-              <div className="mt-6">
-                <h3 className="text-md font-medium text-gray-700 mb-3">Fotos adicionadas:</h3>
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            {/* Descrição e Observações */}
+            <Card>
+              <h2 className="text-xl font-bold mb-6">Descrição e Observações</h2>
+              <div className="space-y-6">
+                <div>
+                  <Label htmlFor="descricaoAnuncio" className="mb-2 block">Descrição do Veículo</Label>
+                  <Textarea
+                    id="descricaoAnuncio"
+                    rows={5}
+                    placeholder="Digite a descrição do veículo"
+                    {...form.register("descricaoAnuncio")}
+                  />
+                </div>
+
+                <div>
+                  <Label htmlFor="observacoesInternas" className="mb-2 block">Observações (Internas)</Label>
+                  <Textarea
+                    id="observacoesInternas"
+                    rows={3}
+                    placeholder="Digite observações sobre o veículo"
+                    {...form.register("observacoesInternas")}
+                  />
+                </div>
+              </div>
+            </Card>
+          </div>
+
+          <div className="lg:col-span-1 space-y-8">
+            <Card className="sticky top-24">
+              <h2 className="text-xl font-bold mb-6">Fotos do Veículo</h2>
+              
+              {/* Área de Upload */}
+              <div 
+                {...getRootProps()} 
+                className={`flex flex-col items-center justify-center p-8 border-2 border-dashed rounded-lg text-center mb-6 cursor-pointer transition-colors ${
+                  isDragActive 
+                    ? 'border-primary bg-primary/10' 
+                    : 'border-border hover:border-border'
+                }`}
+              >
+                <input {...getInputProps()} />
+                <p className="font-bold text-lg mb-1">Arraste e solte as fotos aqui ou</p>
+                <button type="button" className="font-semibold text-primary hover:underline">
+                  Selecione as fotos
+                </button>
+              </div>
+
+              {/* Grade de Fotos */}
+              {fotosUrls.length > 0 && (
+                <div className="grid grid-cols-2 gap-4">
                   {fotosUrls.map((url, index) => (
                     <div key={index} className="relative group">
-                      <div className="aspect-square rounded-lg overflow-hidden border border-gray-200">
+                      <div className="aspect-square rounded-lg overflow-hidden border-2 border-primary">
                         <Image
                           src={url}
                           alt={`Foto ${index + 1}`}
@@ -517,39 +525,61 @@ export default function VeiculoForm({ initialData }: VeiculoFormProps) {
                       <button
                         type="button"
                         onClick={() => removeFoto(index)}
-                        aria-label={`Remover foto ${index + 1}`}
-                        className="absolute -top-2 -right-2 bg-red-500 hover:bg-red-600 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity"
+                        title={`Remover foto ${index + 1}`}
+                        className="absolute top-1 right-1 bg-black/50 text-white p-1 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
                       >
-                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                        <svg fill="currentColor" height="16" viewBox="0 0 256 256" width="16" xmlns="http://www.w3.org/2000/svg">
+                          <path d="M205.66,194.34a8,8,0,0,1-11.32,11.32L128,139.31,61.66,205.66a8,8,0,0,1-11.32-11.32L116.69,128,50.34,61.66A8,8,0,0,1,61.66,50.34L128,116.69l66.34-66.35a8,8,0,0,1,11.32,11.32L139.31,128Z"/>
                         </svg>
                       </button>
+                      {index === 0 && (
+                        <div className="absolute bottom-1 left-1 bg-primary text-black text-xs font-bold px-2 py-0.5 rounded">
+                          Principal
+                        </div>
+                      )}
                     </div>
                   ))}
                 </div>
-              </div>
-            )}
-          </div>
-
-          {/* Botão de Submit */}
-          <div className="flex justify-end pt-4">
-            <button
-              type="submit"
-              disabled={isPending}
-              className="bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 text-white font-semibold py-3 px-8 rounded-md transition-colors duration-200 flex items-center gap-2"
-            >
-              {isPending ? (
-                <>
-                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-                  Salvando...
-                </>
-              ) : (
-                initialData ? "Atualizar Veículo" : "Salvar Veículo"
               )}
-            </button>
+            </Card>
           </div>
-        </form>
-      </div>
-    </main>
+        </div>
+
+        {/* Footer de Ações */}
+        <footer className="mt-12 pt-8 border-t border-border flex items-center justify-between">
+          {initialData && (
+            <Button
+              type="button"
+              variant="secondary"
+              className="text-red-600 hover:text-red-700"
+              onClick={() => {
+                if (window.confirm('Tem certeza que deseja excluir este veículo?')) {
+                  deleteVeiculo({ id: String(initialData?.id ?? 0) });
+                }
+              }}
+              disabled={isPending}
+            >
+              Excluir Veículo
+            </Button>
+          )}
+          <div className="flex items-center gap-4 ml-auto">
+            <Button
+              type="button"
+              variant="secondary"
+              onClick={() => router.back()}
+            >
+              Cancelar
+            </Button>
+            <Button
+              type="submit"
+              variant="primary"
+              disabled={isPending}
+            >
+              {isPending ? 'Salvando...' : (initialData ? 'Atualizar Veículo' : 'Salvar Veículo')}
+            </Button>
+          </div>
+        </footer>
+      </form>
+    </div>
   );
 }
