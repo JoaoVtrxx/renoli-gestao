@@ -94,20 +94,51 @@ export default function VeiculosPage() {
   }
 
   if (!veiculos || veiculos.length === 0) {
+    // Verificar se há filtros ativos
+    const hasActiveFilters = debounceTermoBusca.length > 0 || filtroStatus !== null;
+
     return (
       <div className="p-6">
         <div className="flex min-h-[60vh] flex-col items-center justify-center text-center">
           <h1 className="mb-4 text-3xl font-bold text-gray-800">
             Estoque de Veículos
           </h1>
-          <p className="mb-6 text-lg text-gray-600">
-            Nenhum veículo cadastrado ainda.
-          </p>
-          <Link href="/veiculos/novo">
-            <Button variant="primary" className="text-center">
-              Cadastrar Primeiro Veículo
-            </Button>
-          </Link>
+          
+          {hasActiveFilters ? (
+            <>
+              <p className="mb-6 text-lg text-gray-600">
+                Nenhum veículo encontrado para os filtros aplicados.
+              </p>
+              <div className="flex gap-4">
+                <Button 
+                  variant="secondary" 
+                  onClick={() => {
+                    setTermoBusca('');
+                    setFiltroStatus(null);
+                  }}
+                  className="text-center"
+                >
+                  Limpar Filtros
+                </Button>
+                <Link href="/veiculos/novo">
+                  <Button variant="primary" className="text-center">
+                    Adicionar Veículo
+                  </Button>
+                </Link>
+              </div>
+            </>
+          ) : (
+            <>
+              <p className="mb-6 text-lg text-gray-600">
+                Nenhum veículo cadastrado ainda.
+              </p>
+              <Link href="/veiculos/novo">
+                <Button variant="primary" className="text-center">
+                  Cadastrar Primeiro Veículo
+                </Button>
+              </Link>
+            </>
+          )}
         </div>
       </div>
     );
@@ -250,15 +281,17 @@ export default function VeiculosPage() {
                   <TableCell>
                     <div className="flex items-center gap-2">
                       {/* Botão Ver */}
-                      <button 
-                        className="rounded p-1 text-gray-400 hover:bg-gray-100 hover:text-gray-600"
-                        title="Ver detalhes"
-                      >
-                        <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                        </svg>
-                      </button>
+                      <Link href={`/veiculos/${veiculo.id}`}>
+                        <button 
+                          className="rounded p-1 text-gray-400 hover:bg-gray-100 hover:text-gray-600"
+                          title="Ver detalhes"
+                        >
+                          <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                          </svg>
+                        </button>
+                      </Link>
                       
                       {/* Botão Editar */}
                       <Link href={`/veiculos/${veiculo.id}/editar`}>

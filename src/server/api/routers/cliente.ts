@@ -37,9 +37,11 @@ export const clienteRouter = createTRPCRouter({
     .input(
       z.object({
         termoBusca: z.string().optional(),
+        page: z.number().default(1),
+        pageSize: z.number().default(10),
       })
     )
-    .query(({ ctx, input }) => {
+    .query(async ({ ctx, input }) => {
       const where = input.termoBusca
         ? {
             OR: [
@@ -65,10 +67,23 @@ export const clienteRouter = createTRPCRouter({
           }
         : {};
 
-      return ctx.db.cliente.findMany({
+      // Buscar clientes paginados
+      const clientes = await ctx.db.cliente.findMany({
         where,
         orderBy: { nome: "asc" },
+        take: input.pageSize,
+        skip: (input.page - 1) * input.pageSize,
       });
+
+      // Contar total de clientes que correspondem ao filtro
+      const totalClientes = await ctx.db.cliente.count({
+        where,
+      });
+
+      return {
+        clientes,
+        totalClientes,
+      };
     }),
 
   create: protectedProcedure
@@ -146,5 +161,92 @@ export const clienteRouter = createTRPCRouter({
           id: input.id,
         },
       });
+    }),
+
+  exportEtiquetas: protectedProcedure
+    .input(
+      z.object({
+        termoBusca: z.string().optional(),
+      })
+    )
+    .query(async ({ ctx, input }): Promise<string> => {
+      // Construir a mesma cláusula where que a getAll usa
+      const where = input.termoBusca
+        ? {
+            OR: [
+              {
+                nome: {
+                  contains: input.termoBusca,
+                  mode: "insensitive" as const,
+                },
+              },
+              {
+                cpf: {
+                  contains: input.termoBusca,
+                  mode: "insensitive" as const,
+                },
+              },
+              {
+                celular: {
+                  contains: input.termoBusca,
+                  mode: "insensitive" as const,
+                },
+              },
+            ],
+          }
+        : {};
+
+      // Buscar clientes com apenas os campos necessários para etiquetas
+      const clientes = await ctx.db.cliente.findMany({
+        where,
+        select: {
+          nome: true,
+          rua: true,
+          numero: true,
+          complemento: true,
+          bairro: true,
+          cidade: true,
+          estado: true,
+          cep: true,
+        },
+        orderBy: { nome: "asc" },
+      });
+
+      // Função para escapar aspas duplas em CSV
+      const escapeCsvValue = (value: string | null | undefined): string => {
+        if (!value) return "";
+        // Escapar aspas duplas duplicando-as e envolver em aspas duplas
+        return `"${value.replace(/"/g, '""')}"`;
+      };
+
+      // Criar string CSV
+      let csvContent = '"Nome","Endereço","Bairro","Cidade/UF","CEP"\n';
+
+      for (const cliente of clientes) {
+        // Formatar endereço completo
+        const enderecoParts = [
+          cliente.rua,
+          cliente.numero,
+          cliente.complemento
+        ].filter(Boolean); // Remove valores vazios/null
+        
+        const enderecoCompleto = enderecoParts.join(", ");
+        
+        // Formatar cidade/UF
+        const cidadeUf = [cliente.cidade, cliente.estado]
+          .filter(Boolean)
+          .join("/");
+
+        // Adicionar linha ao CSV
+        csvContent += [
+          escapeCsvValue(cliente.nome),
+          escapeCsvValue(enderecoCompleto),
+          escapeCsvValue(cliente.bairro),
+          escapeCsvValue(cidadeUf),
+          escapeCsvValue(cliente.cep),
+        ].join(",") + "\n";
+      }
+
+      return csvContent;
     }),
 });

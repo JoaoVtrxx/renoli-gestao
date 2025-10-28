@@ -1,5 +1,6 @@
 import { type DefaultSession, type NextAuthConfig } from "next-auth";
 import Credentials from "next-auth/providers/credentials";
+import { env } from "~/env";
 
 /**
  * Module augmentation for `next-auth` types. Allows us to add custom properties to the `session`
@@ -39,19 +40,28 @@ export const authConfig = {
       name: "Credentials",
       credentials: {
         name: { label: "Nome", type: "text", placeholder: "Renê" },
+        password: { label: "Senha", type: "password" },
       },
       async authorize(credentials) {
-        // Lógica de desenvolvimento - aceita qualquer nome
-        if (!credentials?.name) {
+        // Validar se as credenciais foram fornecidas
+        if (!credentials?.name || !credentials?.password) {
           return null;
         }
         
-        const user = { 
-          id: "user_test_id", 
-          name: credentials.name as string, 
-          email: "test@renoli.com" 
-        };
-        return user;
+        // Verificar nome de usuário fixo e senha do env
+        const validUsername = "admin"; // ou "Renê" se preferir
+        
+        if (credentials.name === validUsername && credentials.password === env.ADMIN_PASSWORD) {
+          const user = { 
+            id: "user_test_id", 
+            name: credentials.name as string, 
+            email: "admin@renoli.com" 
+          };
+          return user;
+        }
+        
+        // Credenciais inválidas
+        return null;
       },
     }),
   ],

@@ -2,9 +2,12 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useSession, signOut } from "next-auth/react";
+import Image from "next/image";
 
 export default function Sidebar() {
   const pathname = usePathname();
+  const { data: session } = useSession();
 
   const menuItems = [
     {
@@ -106,21 +109,66 @@ export default function Sidebar() {
 
       {/* Footer/User Section */}
       <div className="p-4 border-t border-white/10">
-        <div className="flex items-center px-4 py-2">
-          <div className="w-8 h-8 bg-primary rounded-full flex items-center justify-center mr-3">
-            <svg className="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 20 20">
-              <path fillRule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clipRule="evenodd" />
-            </svg>
+        {session?.user ? (
+          <div className="flex items-center px-4 py-2">
+            <div className="w-8 h-8 bg-primary rounded-full flex items-center justify-center mr-3 overflow-hidden">
+              {session.user.image ? (
+                <Image
+                  src={session.user.image}
+                  alt={session.user.name ?? "Avatar"}
+                  width={32}
+                  height={32}
+                  className="w-full h-full object-cover"
+                />
+              ) : (
+                <svg className="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clipRule="evenodd" />
+                </svg>
+              )}
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-medium text-white font-display truncate">
+                {session.user.name ?? "Usuário"}
+              </p>
+              <p className="text-xs text-white/70 font-display">
+                Online
+              </p>
+            </div>
+            <button
+              onClick={() => signOut()}
+              className="ml-2 p-1 text-white/70 hover:text-white transition-colors"
+              title="Sair"
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+              </svg>
+            </button>
           </div>
-          <div className="flex-1 min-w-0">
-            <p className="text-sm font-medium text-white font-display">
-              Usuário
-            </p>
-            <p className="text-xs text-white/70 font-display">
-              Online
-            </p>
+        ) : (
+          <div className="px-4 py-2">
+            <div className="flex items-center mb-2">
+              <div className="w-8 h-8 bg-white/20 rounded-full flex items-center justify-center mr-3">
+                <svg className="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clipRule="evenodd" />
+                </svg>
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-medium text-white font-display">
+                  Visitante
+                </p>
+                <p className="text-xs text-white/70 font-display">
+                  Offline
+                </p>
+              </div>
+            </div>
+            <Link
+              href="/api/auth/signin"
+              className="block w-full text-center px-3 py-2 bg-primary/20 hover:bg-primary/30 text-white text-sm font-medium rounded-lg transition-colors"
+            >
+              Fazer Login
+            </Link>
           </div>
-        </div>
+        )}
       </div>
     </aside>
   );

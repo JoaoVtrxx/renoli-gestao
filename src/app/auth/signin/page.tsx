@@ -3,75 +3,121 @@
 import { signIn } from "next-auth/react";
 import { useSearchParams } from "next/navigation";
 import { useState, Suspense } from "react";
+import Image from "next/image"; 
+import { Input, Label, Button, Card } from "~/components/ui";
 
 function SignInForm() {
   const [name, setName] = useState("");
+  const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [errorMessage, setErrorMessage] = useState("");
   const searchParams = useSearchParams();
   const callbackUrl = searchParams.get("callbackUrl") ?? "/";
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!name.trim()) return;
+    
+    // Validação básica
+    if (!name.trim() || !password.trim()) {
+      setErrorMessage("Por favor, preencha todos os campos.");
+      return;
+    }
 
     setIsLoading(true);
+    setErrorMessage("");
+    
     try {
       const result = await signIn("credentials", {
         name: name.trim(),
+        password: password,
         callbackUrl,
-        redirect: true,
+        redirect: false, // Para capturar erros
       });
       
       if (result?.error) {
-        console.error("Erro no login:", result.error);
+        setErrorMessage("Credenciais inválidas. Verifique seu nome de usuário e senha.");
+      } else if (result?.ok) {
+        // Redirecionar manualmente se o login foi bem-sucedido
+        window.location.href = callbackUrl;
       }
     } catch (error) {
       console.error("Erro no login:", error);
+      setErrorMessage("Erro interno. Tente novamente.");
     } finally {
       setIsLoading(false);
     }
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-[#2e026d] to-[#15162c]">
-      <div className="max-w-md w-full space-y-8 p-8">
-        <div>
-          <h2 className="mt-6 text-center text-3xl font-extrabold text-white">
-            Faça login na sua conta
-          </h2>
-          <p className="mt-2 text-center text-sm text-gray-300">
-            Entre com qualquer nome para acessar o sistema
-          </p>
+    <div className="min-h-screen flex items-center justify-center bg-background px-4">
+      <Card className="w-full max-w-md p-8 shadow-md">
+        {/* Logo da Renoli */}
+        <div className="text-center mb-6">
+          <div className="w-48 h-32 mx-auto mb-4 flex items-center justify-center">
+            
+            <Image
+              src="/logo.jpg"
+              alt="Renoli Veículos"
+              width={192}
+              height={128}
+              className="object-contain"
+              priority
+            />
+           
+          </div>
+          <h1 className="text-2xl font-bold text-foreground">Renoli Veículos</h1>
+          <p className="text-muted-foreground mt-2">Acesso ao Sistema</p>
         </div>
-        <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
-          <div>
-            <label htmlFor="name" className="sr-only">
-              Nome
-            </label>
-            <input
+
+        <form className="space-y-4" onSubmit={handleSubmit}>
+          {/* Campo Nome de Usuário */}
+          <div className="space-y-2">
+            <Label htmlFor="name">Nome de Usuário</Label>
+            <Input
               id="name"
               name="name"
               type="text"
               required
-              className="appearance-none rounded-md relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
-              placeholder="Digite seu nome"
+              placeholder="Digite seu nome de usuário"
               value={name}
               onChange={(e) => setName(e.target.value)}
               disabled={isLoading}
             />
           </div>
 
-          <div>
-            <button
-              type="submit"
-              disabled={isLoading || !name.trim()}
-              className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              {isLoading ? "Entrando..." : "Entrar"}
-            </button>
+          {/* Campo Senha */}
+          <div className="space-y-2">
+            <Label htmlFor="password">Senha</Label>
+            <Input
+              id="password"
+              name="password"
+              type="password"
+              required
+              placeholder="Digite sua senha"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              disabled={isLoading}
+            />
           </div>
+
+          {/* Mensagem de Erro */}
+          {errorMessage && (
+            <div className="text-destructive text-sm text-center bg-destructive/10 p-3 rounded-md border border-destructive/20">
+              {errorMessage}
+            </div>
+          )}
+
+          {/* Botão de Submissão */}
+          <Button
+            type="submit"
+            variant="primary"
+            className="w-full"
+            disabled={isLoading || !name.trim() || !password.trim()}
+          >
+            {isLoading ? "Entrando..." : "Entrar"}
+          </Button>
         </form>
-      </div>
+      </Card>
     </div>
   );
 }

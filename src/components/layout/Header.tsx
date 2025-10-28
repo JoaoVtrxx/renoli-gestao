@@ -16,16 +16,6 @@ export default function Header() {
             </span>
             
             <button 
-              className="relative rounded-full p-2 text-gray-500 hover:bg-black/5"
-              title="Notificações"
-              aria-label="Notificações"
-            >
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-3.5-3.5c-.5-.5-.5-1.3 0-1.8L20 8V6a2 2 0 00-2-2H6a2 2 0 00-2 2v2l3.5 3.7c.5.5.5 1.3 0 1.8L4 17h5m6 0v4a1 1 0 01-1 1h-4a1 1 0 01-1-1v-4m6 0H9" />
-              </svg>
-            </button>
-            
-            <button 
               onClick={() => signOut()}
               className="bg-primary/20 text-primary px-4 py-2 rounded-lg text-sm font-semibold hover:bg-primary/30 transition-colors"
             >

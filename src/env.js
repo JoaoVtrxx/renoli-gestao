@@ -9,6 +9,7 @@ export const env = createEnv({
     NODE_ENV: z.enum(["development", "test", "production"]).default("development"),
     AUTH_SECRET: process.env.NODE_ENV === "production" ? z.string() : z.string().optional(),
     SUPABASE_SERVICE_KEY: z.string(),
+    ADMIN_PASSWORD: z.string(),
   },
 
   client: {
@@ -26,6 +27,7 @@ export const env = createEnv({
     // Variáveis do Cliente
     NEXT_PUBLIC_SUPABASE_URL: process.env.NEXT_PUBLIC_SUPABASE_URL,           // <-- Adicionada
     NEXT_PUBLIC_SUPABASE_ANON_KEY: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY, // <-- Adicionada
+    ADMIN_PASSWORD: process.env.ADMIN_PASSWORD
   },
   
   skipValidation: !!process.env.SKIP_ENV_VALIDATION,

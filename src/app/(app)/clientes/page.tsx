@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useState, useEffect } from "react";
 import { api } from "~/trpc/react";
+import { toast } from "react-hot-toast";
 import { 
   Card, 
   Button, 
@@ -34,11 +35,46 @@ function useDebounce(value: string, delay: number) {
 
 export default function ClientesPage() {
   const [searchTerm, setSearchTerm] = useState("");
+  const [isExporting, setIsExporting] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
   const debouncedSearchTerm = useDebounce(searchTerm, 300); // 300ms delay
   
-  const { data: clientes, isLoading } = api.cliente.getAll.useQuery({
+  const PAGE_SIZE = 10;
+  
+  const { data, isLoading } = api.cliente.getAll.useQuery({
     termoBusca: debouncedSearchTerm || undefined,
+    page: currentPage,
+    pageSize: PAGE_SIZE,
   });
+
+  const clientes = data?.clientes;
+  const totalClientes = data?.totalClientes ?? 0;
+  const totalPages = Math.ceil(totalClientes / PAGE_SIZE);
+
+  // Funções de navegação de paginação
+  const goToNextPage = () => {
+    if (currentPage < totalPages) {
+      setCurrentPage(currentPage + 1);
+    }
+  };
+
+  const goToPreviousPage = () => {
+    if (currentPage > 1) {
+      setCurrentPage(currentPage - 1);
+    }
+  };
+
+  // Reset da página quando o termo de busca muda
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [debouncedSearchTerm]);
+
+  // Hook para exportação de etiquetas
+  const { refetch: exportEtiquetas } = api.cliente.exportEtiquetas.useQuery(
+    { termoBusca: debouncedSearchTerm || undefined },
+    { enabled: false } // Só busca quando chamado manualmente
+  );
+
   const utils = api.useUtils();
 
   const deleteMutation = api.cliente.delete.useMutation({
@@ -58,6 +94,46 @@ export default function ClientesPage() {
     
     if (confirmDelete) {
       deleteMutation.mutate({ id: clienteId });
+    }
+  };
+
+  const handleExportarEtiquetas = async () => {
+    setIsExporting(true);
+    
+    try {
+      const result = await exportEtiquetas();
+      
+      if (result.data) {
+        // Criar Blob com o conteúdo CSV
+        const blob = new Blob([result.data], { 
+          type: 'text/csv;charset=utf-8;' 
+        });
+        
+        // Criar URL temporária para o Blob
+        const url = URL.createObjectURL(blob);
+        
+        // Criar elemento <a> invisível para download
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = 'etiquetas-clientes.csv';
+        
+        // Simular clique no link
+        document.body.appendChild(link);
+        link.click();
+        
+        // Limpar URL temporária e remover elemento
+        document.body.removeChild(link);
+        URL.revokeObjectURL(url);
+        
+        toast.success('Etiquetas exportadas com sucesso!');
+      } else {
+        toast.error('Nenhum dado encontrado para exportar.');
+      }
+    } catch (error) {
+      console.error('Erro ao exportar etiquetas:', error);
+      toast.error('Erro ao exportar etiquetas. Tente novamente.');
+    } finally {
+      setIsExporting(false);
     }
   };
 
@@ -125,11 +201,28 @@ export default function ClientesPage() {
                 className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg bg-gray-50 focus:ring-primary-dark focus:border-primary-dark"
               />
             </div>
-            <Button variant="secondary" className="flex items-center gap-2 px-4 py-2 border border-gray-300 rounded-lg font-medium">
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
-              </svg>
-              Exportar Etiquetas
+            <Button 
+              variant="secondary" 
+              className="flex items-center gap-2 px-4 py-2 border border-gray-300 rounded-lg font-medium"
+              onClick={handleExportarEtiquetas}
+              disabled={isExporting}
+            >
+              {isExporting ? (
+                <>
+                  <svg className="w-5 h-5 animate-spin" fill="none" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                  </svg>
+                  Exportando...
+                </>
+              ) : (
+                <>
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
+                  </svg>
+                  Exportar Etiquetas
+                </>
+              )}
             </Button>
           </div>
 
@@ -191,29 +284,70 @@ export default function ClientesPage() {
         </main>
 
         {/* Footer com Paginação */}
-        <footer className="flex items-center justify-center p-4 border-t border-gray-200">
-          <nav className="flex items-center gap-2">
-            <button 
-              className="p-2 text-primary-dark hover:bg-gray-200 rounded-full disabled:opacity-50" 
-              disabled
-              title="Página anterior"
-            >
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-              </svg>
-            </button>
-            <button className="px-4 py-2 rounded-lg bg-primary text-primary-dark text-sm font-bold">1</button>
-            <button className="px-4 py-2 rounded-lg hover:bg-gray-200 text-gray-600 text-sm">2</button>
-            <button className="px-4 py-2 rounded-lg hover:bg-gray-200 text-gray-600 text-sm">3</button>
-            <button 
-              className="p-2 text-primary-dark hover:bg-gray-200 rounded-full"
-              title="Próxima página"
-            >
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-              </svg>
-            </button>
-          </nav>
+        <footer className="flex items-center justify-between p-4 border-t border-gray-200">
+          <div className="text-sm text-gray-600">
+            Mostrando {clientes?.length ?? 0} de {totalClientes} clientes
+          </div>
+          
+          {totalPages > 1 && (
+            <nav className="flex items-center gap-2">
+              <button 
+                className="p-2 text-primary-dark hover:bg-gray-200 rounded-full disabled:opacity-50" 
+                disabled={currentPage === 1}
+                onClick={goToPreviousPage}
+                title="Página anterior"
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                </svg>
+              </button>
+              
+              {/* Números das páginas */}
+              {Array.from({ length: totalPages }, (_, i) => i + 1).map((pageNumber) => {
+                // Mostrar apenas algumas páginas ao redor da página atual
+                const showPage = pageNumber === 1 || 
+                                pageNumber === totalPages || 
+                                (pageNumber >= currentPage - 2 && pageNumber <= currentPage + 2);
+                
+                if (!showPage) {
+                  // Mostrar "..." se necessário
+                  if (pageNumber === currentPage - 3 || pageNumber === currentPage + 3) {
+                    return (
+                      <span key={pageNumber} className="px-2 text-gray-400">
+                        ...
+                      </span>
+                    );
+                  }
+                  return null;
+                }
+                
+                return (
+                  <button 
+                    key={pageNumber}
+                    onClick={() => setCurrentPage(pageNumber)}
+                    className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                      pageNumber === currentPage
+                        ? "bg-primary text-primary-dark font-bold"
+                        : "hover:bg-gray-200 text-gray-600"
+                    }`}
+                  >
+                    {pageNumber}
+                  </button>
+                );
+              })}
+              
+              <button 
+                className="p-2 text-primary-dark hover:bg-gray-200 rounded-full disabled:opacity-50"
+                disabled={currentPage === totalPages}
+                onClick={goToNextPage}
+                title="Próxima página"
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                </svg>
+              </button>
+            </nav>
+          )}
         </footer>
       </Card>
     </div>
