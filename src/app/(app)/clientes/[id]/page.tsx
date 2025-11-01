@@ -3,12 +3,6 @@ import { notFound } from "next/navigation";
 import { api } from "~/trpc/server";
 import { Card, Button, Label } from "~/components/ui";
 
-interface DetalhesClientePageProps {
-  params: {
-    id: string;
-  };
-}
-
 // Função auxiliar para formatar data
 const formatarData = (data: Date | null | undefined): string => {
   if (!data) return "-";
@@ -21,11 +15,12 @@ const formatarTelefone = (telefone: string | null | undefined): string => {
   return telefone;
 };
 
-export default async function DetalhesClientePage({ params }: DetalhesClientePageProps) {
+export default async function DetalhesClientePage({ params }: { params: Promise<{ id: string }> }) {
+  const resolvedParams = await params;
   let cliente;
   
   try {
-    cliente = await api.cliente.getById({ id: params.id });
+    cliente = await api.cliente.getById({ id: resolvedParams.id });
   } catch {
     notFound();
   }
