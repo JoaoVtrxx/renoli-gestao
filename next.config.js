@@ -5,6 +5,18 @@
 import "./src/env.js";
 
 /** @type {import("next").NextConfig} */
-const config = {};
+const config = {
+
+    images: {
+    remotePatterns: [
+      {
+        protocol: 'https',
+        hostname: 'lhfkyswksqxwzuowcpam.supabase.co', // <-- Add this hostname
+        // You can optionally add port and pathname if needed, but hostname is usually enough
+      },
+      // You might add other hostnames here in the future
+    ],
+  },
+};
 
 export default config;

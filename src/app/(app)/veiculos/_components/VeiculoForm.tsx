@@ -1,6 +1,6 @@
  "use client";
 
-import { useForm } from "react-hook-form";
+import { useForm, useController } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { api } from "~/trpc/react";
@@ -10,6 +10,7 @@ import { useRouter } from "next/navigation";
 import { useEffect, useState, useCallback } from "react";
 import { useDropzone } from "react-dropzone";
 import Image from "next/image";
+import Link from "next/link";
 import { env } from "~/env";
 import toast from "react-hot-toast";
 import { Input, Label, Select, Textarea, Card, Button } from "~/components/ui";
@@ -57,6 +58,12 @@ export default function VeiculoForm({ initialData }: VeiculoFormProps) {
     },
   });
 
+  // Hook para controlar especificamente o campo 'placa'
+  const { field: placaField } = useController({
+    name: 'placa',
+    control: form.control,
+  });
+
   // Mutation para gerar presigned URL
   const { mutate: createPresignedUrl } = api.veiculo.createPresignedUrl.useMutation();
 
@@ -76,7 +83,7 @@ export default function VeiculoForm({ initialData }: VeiculoFormProps) {
           }).then(uploadResponse => {
             if (uploadResponse.ok) {
               // Construir URL pública da imagem
-              const publicUrl = `${env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/${data.path}`;
+              const publicUrl = `${env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/fotos-veiculos/${data.path}`;
               
               // Adicionar URL ao estado e ao formulário
               setFotosUrls(prev => {
@@ -161,7 +168,7 @@ export default function VeiculoForm({ initialData }: VeiculoFormProps) {
     }
   }
 
-  const { data: clientes, isLoading: isLoadingClientes } = api.cliente.getAll.useQuery({});
+  const { data, isLoading: isLoadingClientes } = api.cliente.getAll.useQuery({});
 
   useEffect(() => {
     if (status === "loading") return;
@@ -186,7 +193,7 @@ export default function VeiculoForm({ initialData }: VeiculoFormProps) {
     <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-8">
       <div className="mb-6">
         <p className="text-sm text-muted">
-          <a className="hover:underline" href="/veiculos">Meu Estoque</a>
+          <Link className="hover:underline" href="/veiculos">Meu Estoque</Link>
           <span className="mx-2">/</span>
           <span className="text-foreground">{initialData ? "Editar Veículo" : "Cadastrar Novo Veículo"}</span>
         </p>
@@ -331,9 +338,22 @@ export default function VeiculoForm({ initialData }: VeiculoFormProps) {
                   <Input
                     id="placa"
                     type="text"
-                    maskOptions={{ mask: "aaa-9*99" }}
+                    maskOptions={{ 
+  mask: 'AAA-0***', // 3 Letras, hífen obrigatório, até 4 alfanuméricos
+  definitions: {
+    'A': /[A-Za-z]/, // Letras
+    '0': /[0-9]/,   // Números
+    '*': /[A-Za-z0-9]/ // Letras ou Números
+  },
+  prepare: function (str: string) {
+    return str.toUpperCase(); // Forçar maiúsculas
+  },
+  onAccept: (value: string) => {
+    placaField.onChange(value); // Atualiza o react-hook-form explicitamente
+  },
+}}
                     placeholder="ABC-1234"
-                    {...form.register("placa")}
+                    {...placaField}
                   />
                   {form.formState.errors.placa && (
                     <p className="text-red-500 text-sm mt-1">{form.formState.errors.placa.message}</p>
@@ -447,7 +467,7 @@ export default function VeiculoForm({ initialData }: VeiculoFormProps) {
                     {isLoadingClientes ? (
                       <option>Carregando...</option>
                     ) : (
-                      clientes?.map((cliente) => (
+                      data?.clientes?.map((cliente) => (
                         <option key={cliente.id} value={cliente.id}>
                           {cliente.nome}
                         </option>

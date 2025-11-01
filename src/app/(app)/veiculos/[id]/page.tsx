@@ -3,15 +3,9 @@
 import Link from "next/link";
 import Image from "next/image";
 import { useState } from "react";
-import { notFound } from "next/navigation";
+import { notFound, useParams } from "next/navigation";
 import { api } from "~/trpc/react";
 import { Card, Button, Badge } from "~/components/ui";
-
-interface DetalhesVeiculoPageProps {
-  params: {
-    id: string;
-  };
-}
 
 // Função auxiliar para mapear status para variantes do Badge
 const getStatusVariant = (status: string): "success" | "warning" | "secondary" => {
@@ -53,11 +47,13 @@ const getTipoTransacaoText = (tipoTransacao: string): string => {
   }
 };
 
-export default function DetalhesVeiculoPage({ params }: DetalhesVeiculoPageProps) {
+export default function DetalhesVeiculoPage() {
+  const params = useParams();
+  const id = params.id as string;
   const [activeTab, setActiveTab] = useState('descricao');
   
   const { data: veiculo, isLoading, isError } = api.veiculo.getById.useQuery({ 
-    id: params.id 
+    id: id 
   });
 
   if (isLoading) {

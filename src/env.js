@@ -8,6 +8,7 @@ export const env = createEnv({
     DATABASE_URL: z.string().url(),
     NODE_ENV: z.enum(["development", "test", "production"]).default("development"),
     AUTH_SECRET: process.env.NODE_ENV === "production" ? z.string() : z.string().optional(),
+    AUTH_URL: z.string().url().optional(),
     SUPABASE_SERVICE_KEY: z.string(),
     ADMIN_PASSWORD: z.string(),
   },
@@ -22,6 +23,7 @@ export const env = createEnv({
     DATABASE_URL: process.env.DATABASE_URL,
     NODE_ENV: process.env.NODE_ENV,
     AUTH_SECRET: process.env.AUTH_SECRET,
+    AUTH_URL: process.env.AUTH_URL,
     SUPABASE_SERVICE_KEY: process.env.SUPABASE_SERVICE_KEY, // <-- Adicionada
 
     // Variáveis do Cliente

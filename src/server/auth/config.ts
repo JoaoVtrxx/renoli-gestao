@@ -35,6 +35,7 @@ export const authConfig = {
   session: {
     strategy: "jwt",
   },
+  trustHost: true, // Adiciona confiança para hosts locais
   providers: [
     Credentials({
       name: "Credentials",

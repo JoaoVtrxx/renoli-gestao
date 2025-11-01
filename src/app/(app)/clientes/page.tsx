@@ -242,7 +242,14 @@ export default function ClientesPage() {
               <TableBody>
                 {clientes?.map((cliente) => (
                   <TableRow key={cliente.id}>
-                    <TableCell className="text-gray-800 font-medium">{cliente.nome}</TableCell>
+                    <TableCell className="text-gray-800">
+                      <Link 
+                        href={`/clientes/${cliente.id}`}
+                        className="font-medium hover:underline text-primary-dark"
+                      >
+                        {cliente.nome}
+                      </Link>
+                    </TableCell>
                     <TableCell className="text-gray-600">{cliente.celular ?? 'Não informado'}</TableCell>
                     <TableCell className="text-gray-600">{cliente.email ?? 'Não informado'}</TableCell>
                     <TableCell className="text-gray-600">

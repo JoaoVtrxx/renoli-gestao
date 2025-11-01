@@ -1,36 +1,46 @@
 "use client";
 
-import React, { type InputHTMLAttributes } from "react";
+import React, { type InputHTMLAttributes, forwardRef } from "react";
 import clsx from "clsx";
-import { useIMask } from "react-imask";
+import { IMaskInput } from "react-imask";
 
 interface InputProps extends InputHTMLAttributes<HTMLInputElement> {
   className?: string;
-  maskOptions?: Parameters<typeof useIMask>[0];
+  maskOptions?: Record<string, unknown>; // Tipo mais específico que any
 }
 
-export function Input({ className, maskOptions, ...props }: InputProps) {
+export const Input = forwardRef<HTMLInputElement, InputProps>(({ className, maskOptions, ...props }, ref) => {
   const inputClassName = clsx(
     "w-full bg-background border border-border rounded-lg px-4 py-3 focus:ring-2 focus:ring-primary focus:border-transparent",
     className
   );
 
-  const { ref } = useIMask(maskOptions ?? {});
-
   if (maskOptions) {
     return (
-      <input
-        {...props}
-        ref={ref as React.RefObject<HTMLInputElement>}
+      <IMaskInput
+        ref={ref}
         className={inputClassName}
+        {...maskOptions}
+        // Sobrescrever com props específicas
+        value={typeof props.value === 'string' ? props.value : ''}
+        onChange={props.onChange}
+        onBlur={props.onBlur}
+        onFocus={props.onFocus}
+        name={props.name}
+        placeholder={props.placeholder}
+        disabled={props.disabled}
+        readOnly={props.readOnly}
       />
     );
   }
 
   return (
     <input
-      className={inputClassName}
       {...props}
+      ref={ref}
+      className={inputClassName}
     />
   );
-}
+});
+
+Input.displayName = "Input";

@@ -117,6 +117,10 @@ export const clienteRouter = createTRPCRouter({
         where: {
           id: input.id,
         },
+        include: {
+          profissao: true,
+          estadoCivil: true,
+        },
       });
     }),
 
