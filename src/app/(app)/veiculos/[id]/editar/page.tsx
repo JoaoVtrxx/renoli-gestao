@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useParams } from "next/navigation";
 import { api } from "~/trpc/react";
 import VeiculoForm from "../../_components/VeiculoForm";
@@ -44,12 +45,12 @@ export default function EditarVeiculoPage() {
           <p className="text-gray-600 mb-6">
             O veículo que você está tentando editar não existe ou foi removido.
           </p>
-          <a 
+          <Link 
             href="/veiculos" 
             className="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
           >
-            Voltar para o estoque
-          </a>
+            Voltar para a lista de veículos
+          </Link>
         </div>
       </div>
     );
