@@ -5,8 +5,11 @@ import { useSearchParams } from "next/navigation";
 import { useState, Suspense } from "react";
 import Image from "next/image"; 
 import { Input, Label, Button, Card } from "~/components/ui";
+import { usePageTitle } from "~/hooks/usePageTitle";
 
 function SignInForm() {
+  usePageTitle("Login");
+  
   const [name, setName] = useState("");
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);

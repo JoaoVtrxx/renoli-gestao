@@ -15,6 +15,7 @@ import {
   TableHead,
   TableCell,
 } from "~/components/ui";
+import { usePageTitle } from "~/hooks/usePageTitle";
 
 // Hook personalizado para debounce
 function useDebounce(value: string, delay: number) {
@@ -34,6 +35,8 @@ function useDebounce(value: string, delay: number) {
 }
 
 export default function ClientesPage() {
+  usePageTitle("Clientes");
+  
   const [searchTerm, setSearchTerm] = useState("");
   const [isExporting, setIsExporting] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);

@@ -15,6 +15,7 @@ import {
   Badge,
   Button,
 } from "~/components/ui";
+import { usePageTitle } from "~/hooks/usePageTitle";
 
 // Função auxiliar para mapear status para variantes do Badge
 const getStatusVariant = (status: string): "success" | "warning" | "secondary" => {
@@ -43,6 +44,8 @@ const getTransacaoVariant = (tipoTransacao: string): "info" | "accent" => {
 };
 
 export default function VeiculosPage() {
+  usePageTitle("Veículos");
+  
   // Estados para busca e filtro
   const [termoBusca, setTermoBusca] = useState('');
   const [filtroStatus, setFiltroStatus] = useState<StatusVeiculo | null>(null);
