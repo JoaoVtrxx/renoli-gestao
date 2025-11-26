@@ -144,6 +144,8 @@ model Veiculo {
     portas        Int
     chassi        String? @unique
     renavam       String? @unique
+    tipo          String? // Ex: "PASSAGEIRO AUTOMÓVEL"
+    localRegistro String? // Ex: "SANTA MARIA RS"
 
     // Financeiro - Usamos Decimal para evitar erros de arredondamento com dinheiro
     precoCusto Decimal?

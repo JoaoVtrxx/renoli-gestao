@@ -1,4 +1,4 @@
- "use client";
+"use client";
 
 import { useForm, useController } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -19,6 +19,7 @@ const createVeiculoSchema = z.object({
   placa: z.string().min(7, "A placa deve ter no mínimo 7 caracteres"),
   marca: z.string().min(2, "A marca é obrigatória"),
   modelo: z.string().min(1, "O modelo é obrigatório"),
+  versao: z.string().optional(),
   anoFabricacao: z.coerce.number().int().min(1900),
   anoModelo: z.coerce.number().int().min(1900),
   cor: z.string().min(3, "A cor é obrigatória"),
@@ -27,9 +28,13 @@ const createVeiculoSchema = z.object({
   cambio: z.string().min(3, "O câmbio é obrigatório"),
   combustivel: z.string().min(3, "O combustível é obrigatório"),
   portas: z.coerce.number().int(),
+  chassi: z.string().optional(),
+  renavam: z.string().optional(),
+  tipo: z.string().optional(),
+  localRegistro: z.string().optional(),
   status: z.nativeEnum(StatusVeiculo),
   tipoTransacao: z.nativeEnum(TipoTransacao),
-  clienteIdVendedor: z.string({ required_error: "Selecione o cliente vendedor."}),
+  clienteIdVendedor: z.string().min(1, "Selecione o cliente vendedor."),
   descricaoAnuncio: z.string().optional(),
   observacoesInternas: z.string().optional(),
   fotos: z.array(z.string()).default([]),
@@ -47,6 +52,9 @@ export default function VeiculoForm({ initialData }: VeiculoFormProps) {
 
   // Estado para gerenciar URLs das fotos
   const [fotosUrls, setFotosUrls] = useState<string[]>(initialData?.fotos ?? []);
+  
+  // Estado para gerenciar o upload do CRLV
+  const [isParsingDocument, setIsParsingDocument] = useState(false);
 
   const form = useForm({
     resolver: zodResolver(createVeiculoSchema),
@@ -66,6 +74,103 @@ export default function VeiculoForm({ initialData }: VeiculoFormProps) {
 
   // Mutation para gerar presigned URL
   const { mutate: createPresignedUrl } = api.veiculo.createPresignedUrl.useMutation();
+
+  // Mutation para fazer parsing do documento CRLV
+  const { mutate: parseDocument } = api.veiculo.parseDocument.useMutation({
+    onSuccess: (result) => {
+      const { data: parsedData } = result;
+      
+      // Preencher os campos do formulário com os dados extraídos
+      if (parsedData.placa) form.setValue("placa", parsedData.placa);
+      if (parsedData.marca) form.setValue("marca", parsedData.marca);
+      if (parsedData.modelo) form.setValue("modelo", parsedData.modelo);
+      if (parsedData.versao) form.setValue("versao", parsedData.versao);
+      if (parsedData.anoFabricacao) form.setValue("anoFabricacao", parsedData.anoFabricacao);
+      if (parsedData.anoModelo) form.setValue("anoModelo", parsedData.anoModelo);
+      if (parsedData.cor) form.setValue("cor", parsedData.cor);
+      if (parsedData.chassi) form.setValue("chassi", parsedData.chassi);
+      if (parsedData.renavam) form.setValue("renavam", parsedData.renavam);
+
+      if (parsedData.combustivel) {
+        form.setValue("combustivel", parsedData.combustivel.toLowerCase());
+      }
+      if (parsedData.tipo) form.setValue("tipo", parsedData.tipo);
+      if (parsedData.localRegistro) form.setValue("localRegistro", parsedData.localRegistro);
+
+      // Preencher descrição do veículo automaticamente
+      const descricao = `Marca/Modelo: ${parsedData.marca ?? ""} ${parsedData.modelo ?? ""} ${parsedData.versao ?? ""}\n` +
+        `Ano/Modelo: ${parsedData.anoFabricacao ?? ""}/${parsedData.anoModelo ?? ""}\n` +
+        `Cor: ${parsedData.cor ?? ""}\n` +
+        `Placa: ${parsedData.placa ?? ""}\n` +
+        `Chassi: ${parsedData.chassi ?? ""}\n` +
+        `RENAVAM: ${parsedData.renavam ?? ""}\n` +
+        `Registrado em: ${parsedData.localRegistro ?? ""}\n` +
+        `Tipo: ${parsedData.tipo ?? ""}`;
+      form.setValue("descricaoAnuncio", descricao.trim());
+
+      setIsParsingDocument(false);
+      
+      // Exibir mensagem de sucesso
+      const camposPreenchidos = Object.values(parsedData).filter(v => v !== null).length;
+      toast.success(`CRLV importado com sucesso! ${camposPreenchidos} campos preenchidos automaticamente.`);
+    },
+    onError: (error) => {
+      setIsParsingDocument(false);
+      toast.error(error.message || "Erro ao processar o documento CRLV");
+    },
+  });
+
+  // Função para converter arquivo para Base64
+  const fileToBase64 = (file: File): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.readAsDataURL(file);
+      reader.onload = () => {
+        const base64String = reader.result as string;
+        // Remover o prefixo "data:application/pdf;base64,"
+        const base64Data = base64String.split(",")[1];
+        resolve(base64Data ?? "");
+      };
+      reader.onerror = () => reject(new Error("Erro ao ler o arquivo"));
+    });
+  };
+
+  // Função para lidar com o upload do CRLV
+  const handleCRLVUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    
+    if (!file) return;
+    
+    // Validar se é um PDF
+    if (file.type !== "application/pdf") {
+      toast.error("Por favor, selecione um arquivo PDF válido");
+      return;
+    }
+    
+    // Validar tamanho (máximo 10MB)
+    if (file.size > 10 * 1024 * 1024) {
+      toast.error("O arquivo deve ter no máximo 10MB");
+      return;
+    }
+    
+    try {
+      setIsParsingDocument(true);
+      toast.loading("Processando documento CRLV...", { id: "parsing" });
+      
+      // Converter para Base64
+      const base64Data = await fileToBase64(file);
+      
+      // Chamar a mutation para parsing
+      parseDocument({ pdfBase64: base64Data });
+      
+      toast.dismiss("parsing");
+    } catch (error) {
+      setIsParsingDocument(false);
+      toast.dismiss("parsing");
+      toast.error("Erro ao ler o arquivo PDF");
+      console.error(error);
+    }
+  };
 
   // Função para lidar com o drop de arquivos
   const onDrop = useCallback((acceptedFiles: File[]) => {
@@ -203,6 +308,69 @@ export default function VeiculoForm({ initialData }: VeiculoFormProps) {
       <form onSubmit={form.handleSubmit(onSubmit)}>
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           <div className="lg:col-span-2 space-y-8">
+            {/* Importação de CRLV */}
+            {!initialData && (
+              <Card className="bg-blue-50 border-2 border-blue-200">
+                <div className="flex items-start gap-4">
+                  <div className="flex-shrink-0">
+                    <svg className="w-8 h-8 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+                    </svg>
+                  </div>
+                  <div className="flex-1">
+                    <h3 className="text-lg font-semibold text-blue-900 mb-2">
+                      Importar dados do CRLV Digital
+                    </h3>
+                    <p className="text-sm text-blue-700 mb-4">
+                      Faça upload do PDF do CRLV para preencher automaticamente os campos do formulário.
+                    </p>
+                    <div className="flex items-center gap-3">
+                      <input
+                        type="file"
+                        accept="application/pdf"
+                        onChange={handleCRLVUpload}
+                        disabled={isParsingDocument}
+                        className="hidden"
+                        id="crlv-upload"
+                      />
+                      <label htmlFor="crlv-upload">
+                        <Button
+                          type="button"
+                          variant="info"
+                          disabled={isParsingDocument}
+                          className="cursor-pointer"
+                          onClick={(e) => {
+                            e.preventDefault();
+                            document.getElementById("crlv-upload")?.click();
+                          }}
+                        >
+                          {isParsingDocument ? (
+                            <>
+                              <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" fill="none" viewBox="0 0 24 24">
+                                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                              </svg>
+                              Processando...
+                            </>
+                          ) : (
+                            <>
+                              <svg className="w-5 h-5 mr-2 inline-block" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+                              </svg>
+                              Selecionar CRLV (PDF)
+                            </>
+                          )}
+                        </Button>
+                      </label>
+                      <span className="text-xs text-blue-600">
+                        Tamanho máximo: 10MB
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              </Card>
+            )}
+
             {/* Informações Básicas do Veículo */}
             <Card>
               <h2 className="text-xl font-bold mb-6">Informações Básicas do Veículo</h2>
@@ -239,6 +407,7 @@ export default function VeiculoForm({ initialData }: VeiculoFormProps) {
                     id="versao"
                     type="text"
                     placeholder="Selecione a versão"
+                    {...form.register("versao")}
                   />
                 </div>
 
@@ -366,6 +535,7 @@ export default function VeiculoForm({ initialData }: VeiculoFormProps) {
                     id="chassi"
                     type="text"
                     placeholder="Digite o chassi"
+                    {...form.register("chassi")}
                   />
                 </div>
 
@@ -375,6 +545,27 @@ export default function VeiculoForm({ initialData }: VeiculoFormProps) {
                     id="renavam"
                     type="text"
                     placeholder="Digite o RENAVAM"
+                    {...form.register("renavam")}
+                  />
+                </div>
+
+                <div className="space-y-1">
+                  <Label htmlFor="tipo">Tipo do Veículo</Label>
+                  <Input
+                    id="tipo"
+                    type="text"
+                    placeholder="Ex: PASSAGEIRO AUTOMÓVEL"
+                    {...form.register("tipo")}
+                  />
+                </div>
+
+                <div className="space-y-1">
+                  <Label htmlFor="localRegistro">Local de Registro</Label>
+                  <Input
+                    id="localRegistro"
+                    type="text"
+                    placeholder="Ex: SANTA MARIA RS"
+                    {...form.register("localRegistro")}
                   />
                 </div>
               </div>
@@ -485,6 +676,28 @@ export default function VeiculoForm({ initialData }: VeiculoFormProps) {
             <Card>
               <h2 className="text-xl font-bold mb-6">Descrição e Observações</h2>
               <div className="space-y-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="space-y-1">
+                    <Label htmlFor="tipo">Tipo do Veículo</Label>
+                    <Input
+                      id="tipo"
+                      type="text"
+                      placeholder="Ex: PASSAGEIRO AUTOMÓVEL"
+                      {...form.register("tipo")}
+                    />
+                  </div>
+
+                  <div className="space-y-1">
+                    <Label htmlFor="localRegistro">Local de Registro</Label>
+                    <Input
+                      id="localRegistro"
+                      type="text"
+                      placeholder="Ex: SANTA MARIA RS"
+                      {...form.register("localRegistro")}
+                    />
+                  </div>
+                </div>
+
                 <div>
                   <Label htmlFor="descricaoAnuncio" className="mb-2 block">Descrição do Veículo</Label>
                   <Textarea

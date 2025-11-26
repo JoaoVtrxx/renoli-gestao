@@ -11,7 +11,7 @@ export default function Badge({
   children,
   ...props 
 }: BadgeProps) {
-  const baseClasses = "px-2 py-1 text-xs font-semibold rounded-full";
+  const baseClasses = "px-4 py-2 text-sm font-bold rounded-full";
   
   const variantClasses = {
     success: "bg-green-500 text-white",

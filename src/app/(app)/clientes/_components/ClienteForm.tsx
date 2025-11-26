@@ -8,6 +8,7 @@ import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 import { Label, Input, Select, Textarea, Button } from "~/components/ui";
+import { useController } from "react-hook-form";
 
 const createClienteSchema = z.object({
   // Informações Básicas
@@ -55,6 +56,16 @@ export default function ClienteForm({ initialData }: ClienteFormProps) {
       aceitaMarketing: true,
       ...initialData,
     },
+  });
+
+  const { field: celularField } = useController({
+    name: 'celular',
+    control: form.control,
+  });
+
+  const { field: cepField } = useController({
+    name: 'cep',
+    control: form.control,
   });
 
   const { mutate: createCliente, isPending: isCreating } = api.cliente.create.useMutation({
@@ -242,9 +253,14 @@ export default function ClienteForm({ initialData }: ClienteFormProps) {
                 <Input
                   id="celular"
                   type="tel"
-                  maskOptions={{ mask: "(00) 00000-0000" }}
+                  maskOptions={{ 
+                    mask: "(00) 00000-0000",
+                    onAccept: (value: string) => {
+                      celularField.onChange(value);
+                    },
+                  }}
                   placeholder="(00) 00000-0000"
-                  {...form.register("celular")}
+                  {...celularField}
                 />
                 {form.formState.errors.celular && (
                   <p className="text-red-500 text-sm mt-1">{form.formState.errors.celular.message}</p>
@@ -288,9 +304,14 @@ export default function ClienteForm({ initialData }: ClienteFormProps) {
                 <Input
                   id="cep"
                   type="text"
-                  maskOptions={{ mask: "00000-000" }}
+                  maskOptions={{ 
+                    mask: "00000-000",
+                    onAccept: (value: string) => {
+                      cepField.onChange(value);
+                    },
+                  }}
                   placeholder="00000-000"
-                  {...form.register("cep")}
+                  {...cepField}
                 />
               </div>
               

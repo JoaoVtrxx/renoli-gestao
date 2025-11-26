@@ -11,7 +11,7 @@ interface InputProps extends InputHTMLAttributes<HTMLInputElement> {
 
 export const Input = forwardRef<HTMLInputElement, InputProps>(({ className, maskOptions, ...props }, ref) => {
   const inputClassName = clsx(
-    "w-full bg-background border border-border rounded-lg px-4 py-3 focus:ring-2 focus:ring-primary focus:border-transparent",
+    "w-full bg-background border-2 border-border rounded-lg px-5 py-4 text-base min-h-[52px] focus:ring-2 focus:ring-primary focus:border-transparent",
     className
   );
 

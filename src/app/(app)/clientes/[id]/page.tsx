@@ -2,6 +2,21 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { api } from "~/trpc/server";
 import { Card, Button, Label } from "~/components/ui";
+import {
+  User,
+  Cake,
+  Briefcase,
+  Heart,
+  Phone,
+  Mail,
+  MapPin,
+  FileText,
+  Pencil,
+  CheckCircle,
+  XCircle,
+  Building,
+  ClipboardList,
+} from "lucide-react";
 
 // Função auxiliar para formatar data
 const formatarData = (data: Date | null | undefined): string => {
@@ -13,6 +28,37 @@ const formatarData = (data: Date | null | undefined): string => {
 const formatarTelefone = (telefone: string | null | undefined): string => {
   if (!telefone) return "-";
   return telefone;
+};
+
+// Helper component for displaying information items with icons
+const InfoItem = ({
+  icon: Icon,
+  label,
+  value,
+  multiline = false,
+}: {
+  icon: React.ElementType;
+  label: string;
+  value: string | null | undefined;
+  multiline?: boolean;
+}) => {
+  if (!value) {
+    value = "-";
+  }
+
+  return (
+    <div>
+      <Label className="text-sm font-medium text-muted-foreground flex items-center gap-2">
+        <Icon className="h-4 w-4" />
+        {label}
+      </Label>
+      {multiline ? (
+        <p className="text-foreground whitespace-pre-wrap mt-1">{value}</p>
+      ) : (
+        <p className="text-foreground font-medium mt-1">{value}</p>
+      )}
+    </div>
+  );
 };
 
 export default async function DetalhesClientePage({ params }: { params: Promise<{ id: string }> }) {
@@ -61,162 +107,106 @@ export default async function DetalhesClientePage({ params }: { params: Promise<
   return (
     <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-8">
       {/* Header da Página */}
-      <div className="mb-6 flex items-center justify-between">
+      <div className="mb-8 flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-center">
         <div>
-          <p className="text-sm text-muted">
+          <p className="text-sm text-muted-foreground">
             <Link className="hover:underline" href="/clientes">Meus Clientes</Link>
             <span className="mx-2">/</span>
-            <span className="text-foreground">{cliente.nome}</span>
+            <span className="text-foreground font-medium">{cliente.nome}</span>
           </p>
-          <h1 className="text-3xl font-bold mt-2">{cliente.nome}</h1>
+          <h1 className="text-4xl font-bold tracking-tight mt-1">{cliente.nome}</h1>
         </div>
         <Link href={`/clientes/${cliente.id}/editar`}>
-          <Button variant="primary" className="text-black">
+          <Button variant="primary" className="text-black flex items-center gap-2">
+            <Pencil className="h-4 w-4" />
             Editar Cliente
           </Button>
         </Link>
       </div>
 
       {/* Layout de Conteúdo */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-        {/* Card Dados Pessoais */}
-        <Card>
-          <h2 className="text-xl font-bold mb-6">Dados Pessoais</h2>
-          <div className="space-y-4">
-            <div>
-              <Label className="text-sm font-medium text-muted-foreground">Nome Completo</Label>
-              <p className="text-foreground font-medium">{cliente.nome}</p>
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        
+        {/* Coluna Principal (Esquerda) */}
+        <div className="lg:col-span-2 space-y-8">
+          
+          {/* Card Dados Pessoais */}
+          <Card>
+            <h2 className="text-xl font-bold mb-6 flex items-center gap-3">
+              <User className="h-6 w-6 text-primary" />
+              Dados Pessoais
+            </h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6">
+              <InfoItem icon={User} label="Nome Completo" value={cliente.nome} />
+              <InfoItem icon={ClipboardList} label="CPF" value={cliente.cpf} />
+              <InfoItem icon={ClipboardList} label="RG" value={cliente.rg} />
+              <InfoItem icon={Cake} label="Data de Nascimento" value={formatarData(cliente.dataNascimento)} />
+              <InfoItem icon={Briefcase} label="Profissão" value={cliente.profissao?.nome} />
+              <InfoItem icon={Heart} label="Estado Civil" value={cliente.estadoCivil?.nome} />
             </div>
-            
-            <div>
-              <Label className="text-sm font-medium text-muted-foreground">CPF</Label>
-              <p className="text-foreground">{cliente.cpf ?? "-"}</p>
-            </div>
-            
-            <div>
-              <Label className="text-sm font-medium text-muted-foreground">RG</Label>
-              <p className="text-foreground">{cliente.rg ?? "-"}</p>
-            </div>
-            
-            <div>
-              <Label className="text-sm font-medium text-muted-foreground">Data de Nascimento</Label>
-              <p className="text-foreground">{formatarData(cliente.dataNascimento)}</p>
-            </div>
-            
-            <div>
-              <Label className="text-sm font-medium text-muted-foreground">Profissão</Label>
-              <p className="text-foreground">{cliente.profissao?.nome ?? "-"}</p>
-            </div>
-            
-            <div>
-              <Label className="text-sm font-medium text-muted-foreground">Estado Civil</Label>
-              <p className="text-foreground">{cliente.estadoCivil?.nome ?? "-"}</p>
-            </div>
-          </div>
-        </Card>
+          </Card>
 
-        {/* Card Informações de Contato */}
-        <Card>
-          <h2 className="text-xl font-bold mb-6">Informações de Contato</h2>
-          <div className="space-y-4">
-            <div>
-              <Label className="text-sm font-medium text-muted-foreground">Telefone Celular</Label>
-              <p className="text-foreground font-medium">{formatarTelefone(cliente.celular)}</p>
+          {/* Card Endereço */}
+          <Card>
+            <h2 className="text-xl font-bold mb-6 flex items-center gap-3">
+              <MapPin className="h-6 w-6 text-primary" />
+              Endereço
+            </h2>
+            <div className="space-y-6">
+              <InfoItem icon={MapPin} label="Endereço Completo" value={formatarEndereco()} />
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6 border-t border-border pt-6">
+                <InfoItem icon={Building} label="Cidade" value={cliente.cidade} />
+                <InfoItem icon={Building} label="Estado" value={cliente.estado} />
+                <InfoItem icon={Building} label="Bairro" value={cliente.bairro} />
+                <InfoItem icon={Building} label="CEP" value={cliente.cep} />
+              </div>
             </div>
-            
-            <div>
-              <Label className="text-sm font-medium text-muted-foreground">Telefone Fixo</Label>
-              <p className="text-foreground">{formatarTelefone(cliente.telefoneFixo)}</p>
-            </div>
-            
-            <div>
-              <Label className="text-sm font-medium text-muted-foreground">E-mail</Label>
-              <p className="text-foreground">{cliente.email ?? "-"}</p>
-            </div>
-          </div>
-        </Card>
+          </Card>
 
-        {/* Card Endereço */}
-        <Card>
-          <h2 className="text-xl font-bold mb-6">Endereço</h2>
-          <div className="space-y-4">
-            <div>
-              <Label className="text-sm font-medium text-muted-foreground">Endereço Completo</Label>
-              <p className="text-foreground">{formatarEndereco()}</p>
-            </div>
-            
-            {cliente.rua && (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <Label className="text-sm font-medium text-muted-foreground">Rua</Label>
-                  <p className="text-foreground">{cliente.rua}</p>
-                </div>
-                
-                <div>
-                  <Label className="text-sm font-medium text-muted-foreground">Número</Label>
-                  <p className="text-foreground">{cliente.numero ?? "-"}</p>
-                </div>
-              </div>
-            )}
-            
-            {(cliente.complemento ?? cliente.bairro) && (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <Label className="text-sm font-medium text-muted-foreground">Complemento</Label>
-                  <p className="text-foreground">{cliente.complemento ?? "-"}</p>
-                </div>
-                
-                <div>
-                  <Label className="text-sm font-medium text-muted-foreground">Bairro</Label>
-                  <p className="text-foreground">{cliente.bairro ?? "-"}</p>
-                </div>
-              </div>
-            )}
-            
-            {(cliente.cidade ?? cliente.estado ?? cliente.cep) && (
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div>
-                  <Label className="text-sm font-medium text-muted-foreground">Cidade</Label>
-                  <p className="text-foreground">{cliente.cidade ?? "-"}</p>
-                </div>
-                
-                <div>
-                  <Label className="text-sm font-medium text-muted-foreground">Estado</Label>
-                  <p className="text-foreground">{cliente.estado ?? "-"}</p>
-                </div>
-                
-                <div>
-                  <Label className="text-sm font-medium text-muted-foreground">CEP</Label>
-                  <p className="text-foreground">{cliente.cep ?? "-"}</p>
-                </div>
-              </div>
-            )}
-          </div>
-        </Card>
+        </div>
 
-        {/* Card Preferências */}
-        <Card>
-          <h2 className="text-xl font-bold mb-6">Preferências</h2>
-          <div className="space-y-4">
-            <div>
-              <Label className="text-sm font-medium text-muted-foreground">Aceita Marketing</Label>
-              <p className="text-foreground">
+        {/* Coluna Lateral (Direita) */}
+        <div className="space-y-8">
+
+          {/* Card Informações de Contato */}
+          <Card>
+            <h2 className="text-xl font-bold mb-6 flex items-center gap-3">
+              <Phone className="h-6 w-6 text-primary" />
+              Informações de Contato
+            </h2>
+            <div className="space-y-6">
+              <InfoItem icon={Phone} label="Telefone Celular" value={formatarTelefone(cliente.celular)} />
+              <InfoItem icon={Phone} label="Telefone Fixo" value={formatarTelefone(cliente.telefoneFixo)} />
+              <InfoItem icon={Mail} label="E-mail" value={cliente.email} />
+            </div>
+          </Card>
+
+          {/* Card Preferências */}
+          <Card>
+            <h2 className="text-xl font-bold mb-6 flex items-center gap-3">
+              <ClipboardList className="h-6 w-6 text-primary" />
+              Preferências e Anotações
+            </h2>
+            <div className="space-y-6">
+              <div>
+                <Label className="text-sm font-medium text-muted-foreground flex items-center gap-2">
+                  <CheckCircle className="h-4 w-4" />
+                  Aceita Marketing
+                </Label>
                 {cliente.aceitaMarketing ? (
-                  <span className="text-green-600 font-medium">Sim</span>
+                  <p className="font-medium flex items-center gap-2 mt-1 text-green-600">
+                    <CheckCircle className="h-4 w-4" /> Sim
+                  </p>
                 ) : (
-                  <span className="text-red-600 font-medium">Não</span>
+                  <p className="font-medium flex items-center gap-2 mt-1 text-red-600">
+                    <XCircle className="h-4 w-4" /> Não
+                  </p>
                 )}
-              </p>
+              </div>
+              <InfoItem icon={FileText} label="Anotações de Negócios" value={cliente.observacoesNegocios} multiline />
             </div>
-            
-            <div>
-              <Label className="text-sm font-medium text-muted-foreground">Anotações de Negócios</Label>
-              <p className="text-foreground whitespace-pre-wrap">
-                {cliente.observacoesNegocios ?? "-"}
-              </p>
-            </div>
-          </div>
-        </Card>
+          </Card>
+        </div>
       </div>
     </div>
   );

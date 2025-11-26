@@ -6,7 +6,7 @@ interface CardProps {
 }
 
 export default function Card({ children, className = "" }: CardProps) {
-  const baseClasses = "bg-white rounded-lg shadow-sm p-6";
+  const baseClasses = "bg-white rounded-lg shadow-sm p-8";
   const combinedClasses = className 
     ? `${baseClasses} ${className}` 
     : baseClasses;

@@ -3,13 +3,13 @@
 import { signIn } from "next-auth/react";
 import { useSearchParams } from "next/navigation";
 import { useState, Suspense } from "react";
-import Image from "next/image"; 
+import Image from "next/image";
 import { Input, Label, Button, Card } from "~/components/ui";
 import { usePageTitle } from "~/hooks/usePageTitle";
 
 function SignInForm() {
   usePageTitle("Login");
-  
+
   const [name, setName] = useState("");
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
@@ -19,7 +19,7 @@ function SignInForm() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     // Validação básica
     if (!name.trim() || !password.trim()) {
       setErrorMessage("Por favor, preencha todos os campos.");
@@ -28,7 +28,7 @@ function SignInForm() {
 
     setIsLoading(true);
     setErrorMessage("");
-    
+
     try {
       const result = await signIn("credentials", {
         name: name.trim(),
@@ -36,7 +36,7 @@ function SignInForm() {
         callbackUrl,
         redirect: false, // Para capturar erros
       });
-      
+
       if (result?.error) {
         setErrorMessage("Credenciais inválidas. Verifique seu nome de usuário e senha.");
       } else if (result?.ok) {
@@ -57,7 +57,7 @@ function SignInForm() {
         {/* Logo da Renoli */}
         <div className="text-center mb-6">
           <div className="w-48 h-32 mx-auto mb-4 flex items-center justify-center">
-            
+
             <Image
               src="/logo.jpg"
               alt="Renoli Veículos"
@@ -66,7 +66,7 @@ function SignInForm() {
               className="object-contain"
               priority
             />
-           
+
           </div>
           <h1 className="text-2xl font-bold text-foreground">Renoli Veículos</h1>
           <p className="text-muted-foreground mt-2">Acesso ao Sistema</p>

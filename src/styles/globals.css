@@ -1,5 +1,15 @@
 @import "tailwindcss";
 
+/* Configuração de tamanho base para melhor acessibilidade */
+html {
+  font-size: 112.5%; /* 18px base ao invés de 16px */
+}
+
+body {
+  font-size: 1rem; /* 18px */
+  line-height: 1.6; /* Melhor espaçamento entre linhas */
+}
+
 @theme {
   --font-sans: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif,
     "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
@@ -10,9 +20,9 @@
   --color-sidebar: #0B2A4F; /* O azul escuro da sidebar */
   
   --color-background: #f8f8f5; /* O novo fundo claro */
-  --color-foreground: #181711; /* O novo texto principal (escuro) */
-  --color-muted: #8c855f; /* O novo texto secundário (cinza/bege) */
+  --color-foreground: #181711; /* O novo texto principal (escuro) - alto contraste */
+  --color-muted: #4a4a4a; /* Texto secundário com contraste melhorado (era #8c855f) */
   
   --color-card: #ffffff; /* O fundo dos cards */
-  --color-border: #e6e4db; /* A cor das bordas */
+  --color-border: #d0d0d0; /* Bordas com contraste melhorado (era #e6e4db) */
 }

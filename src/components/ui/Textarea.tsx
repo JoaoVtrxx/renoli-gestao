@@ -9,7 +9,7 @@ export function Textarea({ className, ...props }: TextareaProps) {
   return (
     <textarea
       className={clsx(
-        "w-full bg-background border border-border rounded-lg px-4 py-3 focus:ring-2 focus:ring-primary focus:border-transparent",
+        "w-full bg-background border-2 border-border rounded-lg px-5 py-4 text-base min-h-[120px] focus:ring-2 focus:ring-primary focus:border-transparent",
         className
       )}
       {...props}

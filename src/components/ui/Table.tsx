@@ -9,13 +9,13 @@ type TableCellProps = TdHTMLAttributes<HTMLTableCellElement>;
 
 export function Table({ ...props }: TableProps) {
   return (
-    <table className="w-full text-sm text-left" {...props} />
+    <table className="w-full text-base text-left" {...props} />
   );
 }
 
 export function TableHeader({ ...props }: TableHeaderProps) {
   return (
-    <thead className="text-xs text-muted-foreground-light uppercase bg-background-light" {...props} />
+    <thead className="text-sm font-semibold text-muted uppercase bg-background-light" {...props} />
   );
 }
 
@@ -27,18 +27,18 @@ export function TableBody({ ...props }: TableBodyProps) {
 
 export function TableRow({ ...props }: TableRowProps) {
   return (
-    <tr className="border-b border-border-light hover:bg-background-light" {...props} />
+    <tr className="border-b border-border hover:bg-background-light" {...props} />
   );
 }
 
 export function TableHead({ ...props }: TableHeadProps) {
   return (
-    <th className="px-6 py-3" {...props} />
+    <th className="px-6 py-5" {...props} />
   );
 }
 
 export function TableCell({ ...props }: TableCellProps) {
   return (
-    <td className="px-6 py-4" {...props} />
+    <td className="px-6 py-5" {...props} />
   );
 }
