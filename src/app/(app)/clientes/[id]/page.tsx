@@ -42,9 +42,7 @@ const InfoItem = ({
   value: string | null | undefined;
   multiline?: boolean;
 }) => {
-  if (!value) {
-    value = "-";
-  }
+  value ??= "-";
 
   return (
     <div>
