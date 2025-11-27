@@ -1,59 +1,53 @@
 import { z } from "zod";
 import type { Prisma } from "@prisma/client";
-import path from 'path';
-import { pathToFileURL } from 'url';
-import * as pdfjsLib from 'pdfjs-dist/legacy/build/pdf.mjs';
 import { Document, Packer, Paragraph, TextRun, AlignmentType, Table, TableRow, TableCell, WidthType, BorderStyle } from 'docx';
+import * as pdfjsLib from 'pdfjs-dist/legacy/build/pdf.js';
 
 import { createTRPCRouter, protectedProcedure } from "~/server/api/trpc";
 import { StatusVeiculo, TipoTransacao } from "@prisma/client";
 import { supabase } from "~/server/supabase";
 
-// Configuração vital para funcionar no Windows/Node.js
-const workerSrcPath = path.resolve(
-  process.cwd(),
-  'node_modules/pdfjs-dist/legacy/build/pdf.worker.mjs'
-);
-pdfjsLib.GlobalWorkerOptions.workerSrc = pathToFileURL(workerSrcPath).href;
+// Desabilita worker externo para evitar erros de caminho no Windows/Vercel
+// eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+pdfjsLib.GlobalWorkerOptions.workerSrc = '';
 
 /**
- * Extrai texto de um PDF usando pdfjs-dist
- * Biblioteca robusta da Mozilla para extrair texto de PDFs complexos
+ * Extrai texto de um PDF usando pdfjs-dist (legacy build) sem worker externo
  */
-/* eslint-disable @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-return, @typescript-eslint/no-explicit-any */
 async function parsePDF(buffer: Buffer): Promise<string> {
+  // Defensive Coding: Só injeta se o ambiente não tiver (Vercel às vezes remove)
+  if (!(global as any).DOMMatrix) {
+    // @ts-expect-error - Mock simples para evitar crash
+    (global as any).DOMMatrix = class DOMMatrix {
+      constructor() { return this; }
+      toString() { return "matrix(1, 0, 0, 1, 0, 0)"; }
+    };
+  }
+
   try {
-    // Carregar o documento PDF com configurações que evitam erros de worker/DOMMatrix
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
     const loadingTask = pdfjsLib.getDocument({
-      data: new Uint8Array(buffer), // Buffer convertido para Uint8Array
-      useSystemFonts: true,          // Evita erros de fonte
-      disableFontFace: true,         // Evita erros de carregamento de fonte
-    }) as any;
-    
-    const pdfDocument = await loadingTask.promise;
-    
-    let fullText = "";
-    
-    // Extrair texto de todas as páginas (CRLVs geralmente têm 1 página, mas vamos iterar por segurança)
-    const numPages = pdfDocument.numPages as number;
-    
-    for (let pageNum = 1; pageNum <= numPages; pageNum++) {
-      const page = await pdfDocument.getPage(pageNum);
-      const textContent = await page.getTextContent();
-      
-      // TRUQUE: Junta todos os itens com " | " para separar colunas visuais
-      const pageText = textContent.items
-        .map((item: any) => item.str)
-        .join(' | '); // Pipe para separar colunas
-      
-      fullText += pageText + "\n";
-    }
-    
-    return fullText;
+      data: new Uint8Array(buffer),
+      useSystemFonts: true,
+      disableFontFace: true,
+      disableWorker: true,      // Roda na thread principal
+      useWorkerFetch: false,    // Não busca scripts externos
+      isEvalSupported: false
+    });
+
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access
+    const doc = await loadingTask.promise;
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
+    const page = await doc.getPage(1);
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
+    const content = await page.getTextContent();
+
+    // Mantém o separador pipe "|" vital para o regex posicional
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-return, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-explicit-any
+    return content.items.map((item: any) => item.str).join(' | ').trim();
   } catch (error) {
-    throw new Error(
-      `Erro ao extrair texto do PDF: ${error instanceof Error ? error.message : String(error)}`
-    );
+    console.error("Erro no parsePDF:", error);
+    throw new Error(`Falha ao ler PDF: ${error instanceof Error ? error.message : String(error)}`);
   }
 }
 

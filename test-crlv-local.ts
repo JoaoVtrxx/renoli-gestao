@@ -1,13 +1,16 @@
 import fs from 'fs';
 import path from 'path';
 import { pathToFileURL } from 'url';
-import * as pdfjsLib from 'pdfjs-dist/legacy/build/pdf.mjs';
+import { createRequire } from 'module';
+
+const require = createRequire(import.meta.url);
+const pdfjsLib = require('pdfjs-dist/legacy/build/pdf.js');
 
 // === CORREÇÃO DO WORKER (O SEGREDO) ===
 // O Node.js (ESM) no Windows precisa de uma URL de arquivo (`file://`) para o worker.
 const workerSrcPath = path.resolve(
   process.cwd(), // Garante que partimos da raiz do projeto
-  'node_modules/pdfjs-dist/legacy/build/pdf.worker.mjs'
+  'node_modules/pdfjs-dist/legacy/build/pdf.worker.js'
 );
 pdfjsLib.GlobalWorkerOptions.workerSrc = pathToFileURL(workerSrcPath).href;
 
@@ -42,13 +45,23 @@ async function testarLeitura() {
     // O "Truque do Pipe" para separar colunas visuais
     const text = content.items
       .map((item: any) => item.str)
-      .join(' | '); 
+      .join(' | '); // Usar pipe ajuda a separar campos colados
 
-    // === SALVAR LOG COMPLETO ===
-    const logPath = path.resolve('./debug-crlv.txt');
-    fs.writeFileSync(logPath, text);
-    console.log(`\n💾 Texto completo salvo em: ${logPath}`);
-    console.log("Por favor, anexe este arquivo ou cole seu conteúdo no chat.");
+    console.log("\n📝 AMOSRA DO TEXTO EXTRAÍDO:");
+    console.log(text.substring(0, 300) + "...");
+
+    console.log("\n🔍 TESTE DE REGEX (Simulando sua regra de negócio):");
+    
+    // Regex ajustados para serem "gulosos" com espaços e pipes
+    // Procura PLACA (padrão Mercosul ou antigo)
+    const placaRegex = /[A-Z]{3}\s*\|?\s*[0-9]\s*\|?\s*[A-Z0-9]\s*\|?\s*[0-9]{2}/;
+    const placaMatch = text.match(placaRegex);
+    
+    // Procura RENAVAM (11 dígitos)
+    const renavamMatch = text.match(/\d{11}/);
+
+    console.log(`� Placa detectada: ${placaMatch ? placaMatch[0].replace(/\|/g, '').replace(/\s/g, '') : "❌ Não encontrada"}`);
+    console.log(`🔢 Renavam detectado: ${renavamMatch ? renavamMatch[0] : "❌ Não encontrado"}`);
 
   } catch (e) {
     console.error("❌ ERRO FATAL:", e);

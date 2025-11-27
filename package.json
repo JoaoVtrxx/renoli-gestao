@@ -37,7 +37,7 @@
     "lucide-react": "^0.554.0",
     "next": "^15.2.3",
     "next-auth": "5.0.0-beta.25",
-    "pdfjs-dist": "^5.4.394",
+    "pdfjs-dist": "^3.11.174",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "react-dropzone": "^14.3.8",
@@ -50,6 +50,7 @@
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3.3.1",
+    "@swc/core": "^1.15.3",
     "@tailwindcss/postcss": "^4.0.15",
     "@types/file-saver": "^2.0.7",
     "@types/node": "^20.14.10",
@@ -62,6 +63,8 @@
     "prettier-plugin-tailwindcss": "^0.6.11",
     "prisma": "^6.5.0",
     "tailwindcss": "^4.0.15",
+    "ts-node": "^10.9.2",
+    "tsx": "^4.20.6",
     "typescript": "^5.8.2",
     "typescript-eslint": "^8.27.0"
   },

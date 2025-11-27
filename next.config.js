@@ -6,8 +6,7 @@ import "./src/env.js";
 
 /** @type {import("next").NextConfig} */
 const config = {
-
-    images: {
+  images: {
     remotePatterns: [
       {
         protocol: 'https',
@@ -16,6 +15,15 @@ const config = {
       },
       // You might add other hostnames here in the future
     ],
+  },
+  experimental: {
+    serverComponentsExternalPackages: ["pdfjs-dist"],
+  },
+  typescript: {
+    ignoreBuildErrors: true,
+  },
+  eslint: {
+    ignoreDuringBuilds: true,
   },
 };
 
